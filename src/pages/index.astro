@@ -17,12 +17,12 @@ const CATEGORIES = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prob Base - Olympiades</title>
   
-  <!-- 1. Chargement de la feuille de style KaTeX (indispensable pour l'affichage) -->
+  <!-- 1. Chargement de la feuille de style KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   
-  <!-- 2. Chargement des scripts de rendu automatique en arrière-plan -->
+  <!-- 2. Chargement des scripts de rendu -->
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="initKaTeX()"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
     body {
@@ -123,9 +123,8 @@ const CATEGORIES = {
             {prob.Source && <span class="badge-source">{prob.Source}</span>}
           </div>
           
-          <!-- Sécurité : On teste plusieurs clés possibles au cas où ton JSON utilise des minuscules -->
           <div class="statement">
-            {prob.statement|| "⚠️ Aucun énoncé trouvé dans le JSON"}
+            {prob.statement || "⚠️ Aucun énoncé trouvé dans le JSON"}
           </div>
         </div>
       ))}
@@ -133,42 +132,61 @@ const CATEGORIES = {
   </div>
 
   <script is:inline>
-    // 3. Traduction automatique du LaTeX présent dans le texte au chargement
-    function initKaTeX() {
-      renderMathInElement(document.body, {
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false},
-          {left: '\\(', right: '\\)', display: false},
-          {left: '\\[', right: '\\]', display: true}
-        ],
-        throwOnError: false
-      });
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const catFilter = document.getElementById('catFilter');
+      const diffFilter = document.getElementById('diffFilter');
+      const cards = Array.from(document.querySelectorAll('.card'));
+      const statements = Array.from(document.querySelectorAll('.statement'));
 
-    // 4. Script interactif pour filtrer les cartes
-    const catFilter = document.getElementById('catFilter');
-    const diffFilter = document.getElementById('diffFilter');
-    const cards = document.querySelectorAll('.card');
+      // 1. Rendu KaTeX progressif par paquets (évite le freeze CPU)
+      let index = 0;
+      const batchSize = 15; // Nombre d'énoncés convertis par cycle
 
-    function filterProblems() {
-      const selectedCat = catFilter.value;
-      const selectedDiff = diffFilter.value;
+      function renderNextBatch() {
+        if (typeof renderMathInElement !== 'function') return;
 
-      cards.forEach(card => {
-        const matchesCat = !selectedCat || card.dataset.category === selectedCat;
-        const matchesDiff = !selectedDiff || card.dataset.difficulty === selectedDiff;
-
-        if (matchesCat && matchesDiff) {
-          card.classList.remove('hidden');
-        } else {
-          card.classList.add('hidden');
+        const end = Math.min(index + batchSize, statements.length);
+        for (; index < end; index++) {
+          renderMathInElement(statements[index], {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+          });
         }
-      });
-    }
 
-    catFilter.addEventListener('change', filterProblems);
-    diffFilter.addEventListener('change', filterProblems);
+        // S'il reste des éléments, on planifie le prochain paquet au cycle suivant
+        if (index < statements.length) {
+          setTimeout(renderNextBatch, 16); // 16ms correspond à l'intervalle d'une frame à 60fps
+        }
+      }
+
+      // Déclenchement du rendu en arrière-plan
+      renderNextBatch();
+
+      // 2. Filtrage interactif (réponse instantanée)
+      function filterProblems() {
+        const selectedCat = catFilter.value;
+        const selectedDiff = diffFilter.value;
+
+        cards.forEach(card => {
+          const matchesCat = !selectedCat || card.dataset.category === selectedCat;
+          const matchesDiff = !selectedDiff || card.dataset.difficulty === selectedDiff;
+
+          if (matchesCat && matchesDiff) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      }
+
+      catFilter.addEventListener('change', filterProblems);
+      diffFilter.addEventListener('change', filterProblems);
+    });
   </script>
 </body>
 </html>
