@@ -1,113 +1,162 @@
 ---
 import problems from '../data/problems.json';
-import katex from 'katex';
 
-// Dictionnaire pour rendre les catégories lisibles
+// Dictionnaires de correspondance pour afficher les labels propres
 const CATEGORIES = {
-  'N': 'Théorie des Nombres',
-  'G': 'Géométrie',
   'A': 'Algèbre',
-  'C': 'Combinatoire',
-  'FE': 'Équations Fonctionnelles'
+  'G': 'Géométrie',
+  'N': 'Théorie des nombres',
+  'C': 'Combinatoire'
 };
-
-// Fonction pour transformer le LaTeX ($...$ ou $$...$$) en HTML statique
-function renderMath(text) {
-  if (!text) return '';
-  // Rendu pour les blocs de formules $$ ... $$
-  let rendered = text.replace(/\$\$(.*?)\$\$/g, (_, formula) => 
-    katex.renderToString(formula, { displayMode: true, throwOnError: false })
-  );
-  // Rendu pour les formules en ligne $ ... $
-  rendered = rendered.replace(/\$(.*?)\$/g, (_, formula) => 
-    katex.renderToString(formula, { displayMode: false, throwOnError: false })
-  );
-  return rendered;
-}
 ---
 
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width" />
-  <title>Mon Répertoire d'Olympiades</title>
-  <!-- Chargement du CSS de KaTeX pour afficher correctement les symboles -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prob Base - Olympiades</title>
+  
+  <!-- 1. Chargement de la feuille de style KaTeX (indispensable pour l'affichage) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   
+  <!-- 2. Chargement des scripts de rendu automatique en arrière-plan -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="initKaTeX()"></script>
+
   <style>
-    body { font-family: system-ui, sans-serif; background: #f9fafb; color: #1f2937; max-width: 900px; margin: 0 auto; padding: 2rem; }
-    header { margin-bottom: 2rem; }
-    .filters { display: flex; gap: 1rem; margin-bottom: 2rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    select { padding: 0.5rem; border-radius: 4px; border: 1px solid #d1d5db; font-size: 1rem; }
-    .problem-card { background: #fff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 5px solid #3b82f6; }
-    .meta { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
-    .badge { background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: bold; }
-    .badge-diff { background: #ef4444; color: white; }
-    details { margin-top: 1rem; background: #f3f4f6; padding: 0.5rem; border-radius: 4px; }
-    summary { font-weight: 600; cursor: pointer; }
-    .hidden { display: none !important; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      justify-content: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+    }
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 5px solid #3498db;
+    }
+    .meta {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .badge-cat { background: #e8f4fd; color: #2980b9; padding: 4px 8px; border-radius: 4px; }
+    .badge-diff { background: #fff2e6; color: #d35400; padding: 4px 8px; border-radius: 4px; }
+    .badge-source { background: #eaeaea; color: #666; padding: 4px 8px; border-radius: 4px; }
+    .statement {
+      font-size: 16px;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Répertoire de Problèmes de Mathématiques</h1>
+    
+    <!-- Filtres -->
+    <div class="filters">
+      <select id="catFilter">
+        <option value="">Toutes les catégories</option>
+        <option value="A">Algèbre</option>
+        <option value="G">Géométrie</option>
+        <option value="N">Théorie des nombres</option>
+        <option value="C">Combinatoire</option>
+      </select>
 
-  <header>
-    <h1>Répertoire de Problèmes - Mathématiques</h1>
-    <p>Entraînement et planification des révisions.</p>
-  </header>
+      <select id="diffFilter">
+        <option value="">Toutes les difficultés</option>
+        {[...Array(11)].map((_, i) => (
+          <option value={i + 1}>Difficulté {i + 1}</option>
+        ))}
+      </select>
+    </div>
 
-  <!-- Section des Filtres -->
-  <section class="filters">
-    <select id="categoryFilter">
-      <option value="">Toutes les catégories</option>
-      {Object.entries(CATEGORIES).map(([key, value]) => <option value={key}>{value}</option>)}
-    </select>
-
-    <select id="difficultyFilter">
-      <option value="">Toutes les difficultés</option>
-      {Array.from({ length: 11 }, (_, i) => i + 1).map(d => <option value={d}>Difficulté {d}</option>)}
-    </select>
-  </section>
-
-  <!-- Liste des Problèmes -->
-  <main id="problemsContainer">
-    {problems.map((prob) => (
-      <article class="problem-card" data-category={prob.G} data-difficulty={prob.D}>
-        <div class="meta">
-          <span class="badge">{CATEGORIES[prob.G] || prob.G}</span>
-          <span class="badge badge-diff">Niveau {prob.D}</span>
-          {prob.Source && <span> • Source : {prob.Source}</span>}
+    <!-- Grille des cartes -->
+    <div class="grid" id="problemsGrid">
+      {problems.map((prob) => (
+        <div class="card" data-category={prob.G} data-difficulty={prob.D}>
+          <div class="meta">
+            <span class="badge-cat">{CATEGORIES[prob.G] || 'Autre'}</span>
+            <span class="badge-diff">Niveau {prob.D}</span>
+            {prob.Source && <span class="badge-source">{prob.Source}</span>}
+          </div>
+          
+          <!-- Sécurité : On teste plusieurs clés possibles au cas où ton JSON utilise des minuscules -->
+          <div class="statement">
+            {prob.Statement || prob.enonce || prob.texte || prob.problem || "⚠️ Aucun énoncé trouvé dans le JSON"}
+          </div>
         </div>
-        
-        <!-- Énoncé du problème avec rendu mathématique injecté de manière sécurisée -->
-        <div class="statement" set:html={renderMath(prob.Statement)} />
+      ))}
+    </div>
+  </div>
 
-        {prob["Hint 1"] && (
-          <details>
-            <summary>Indice 1</summary>
-            <p set:html={renderMath(prob["Hint 1"])} />
-          </details>
-        )}
+  <script is:inline>
+    // 3. Traduction automatique du LaTeX présent dans le texte au chargement
+    function initKaTeX() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false},
+          {left: '\\[', right: '\\]', display: true}
+        ],
+        throwOnError: false
+      });
+    }
 
-        {prob["Solution Link"] && (
-          <p style="margin-top: 1rem;"><a href={prob["Solution Link"]} target="_blank" rel="noopener noreferrer">Consulter la solution officielle ↗</a></p>
-        )}
-      </article>
-    ))}
-  </main>
-
-  <!-- Script de filtrage ultra-rapide côté client -->
-  <script>
-    const catFilter = document.getElementById('categoryFilter');
-    const diffFilter = document.getElementById('difficultyFilter');
-    const cards = document.querySelectorAll('.problem-card');
+    // 4. Script interactif pour filtrer les cartes
+    const catFilter = document.getElementById('catFilter');
+    const diffFilter = document.getElementById('diffFilter');
+    const cards = document.querySelectorAll('.card');
 
     function filterProblems() {
       const selectedCat = catFilter.value;
       const selectedDiff = diffFilter.value;
 
       cards.forEach(card => {
-        // Gestion des catégories multiples (ex: "CG" contient "G")
-        const matchesCat = !selectedCat || card.dataset.category.includes(selectedCat);
+        const matchesCat = !selectedCat || card.dataset.category === selectedCat;
         const matchesDiff = !selectedDiff || card.dataset.difficulty === selectedDiff;
 
         if (matchesCat && matchesDiff) {
