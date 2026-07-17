@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # Déclenche le build à chaque push sur main
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -20,10 +20,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          # Retrait de la ligne cache qui bloquait le script
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install # Changé de "npm ci" à "npm install"
 
       - name: Build Astro
         run: npm run build
@@ -35,6 +35,14 @@ jobs:
 
   deploy:
     needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
