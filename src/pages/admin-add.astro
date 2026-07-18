@@ -1,4 +1,6 @@
+
 ---
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -127,9 +129,8 @@
     const submitBtn = document.getElementById('submitBtn');
     const statusMessage = document.getElementById('statusMessage');
 
-    // CONFIGURATION DE VOTRE REPO (À MODIFIER AVEC VOS PARAMÈTRES)
-    const GH_OWNER = "VOTRE_NOM_UTILISATEUR_GITHUB"; 
-    const GH_REPO = "VOTRE_NOM_DE_REPO";
+    const GH_OWNER = "AsDuClavier"; 
+    const GH_REPO = "Prob_Base";
     const FILE_PATH = "src/data/problems.json"; 
 
     addForm.addEventListener('submit', async (e) => {
@@ -141,7 +142,7 @@
 
       try {
         // 1. Récupérer le fichier actuel en ligne pour avoir le SHA récent et TOUTES les données à jour
-        const url = `https://api.github.com/repos/${AsDuClavier}/${Prob_Base}/contents/${FILE_PATH}`;
+        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
         const getRes = await fetch(url, {
           headers: { "Authorization": `token ${token}` }
         });
