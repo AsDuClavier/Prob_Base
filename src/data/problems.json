@@ -20146,20 +20146,6 @@
     "Image Link": ""
   },
   {
-    "id": 1244,
-    "Source": "2019 USA TST, P2 of 6",
-    "G": "N",
-    "D": 9,
-    "T": "",
-    "statement": "Let $\\bZ/n\\bZ$ denote the set of integers considered modulo $n$ (hence $\\bZ/n\\bZ$ has $n$ elements). Find all positive integers $n$ for which there exists a bijective function $g: \\bZ/n\\bZ \\to \\bZ/n\\bZ$, such that the $101$ functions \\[g(x),\\quad g(x)+x,\\quad g(x)+2x,\\quad \\dots,\\quad g(x)+100x\\] are all bijections on $\\bZ/n\\bZ$.",
-    "Hint 1": "",
-    "Hint 2": "",
-    "Hint 3": "",
-    "Solution": "",
-    "Solution Link": "",
-    "Image Link": ""
-  },
-  {
     "id": 1243,
     "Source": "2017 CMO, P4 of 5",
     "G": "G",
