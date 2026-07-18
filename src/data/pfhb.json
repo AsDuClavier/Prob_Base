@@ -1,9 +1,9 @@
 [
   {
     "id": "1",
-    "G": "65",
-    "Source": "FHB 2024 - Qualification",
     "statement": "Déterminer tous les nombres entiers naturels $n$ tels que $n^2 + 3n + 2$ soit un nombre premier. Justifier la réponse.",
+    "G": "43",
+    "Source": "Original",
     "Hint 1": "Pensez à factoriser l'expression quadratique.",
     "Hint 2": "$n^2 + 3n + 2 = (n+1)(n+2)$. Un nombre premier peut-il être le produit de deux entiers supérieurs à 1 ?",
     "Solution": "On factorise : $n^2 + 3n + 2 = (n+1)(n+2)$. Pour que ce produit soit un nombre premier, l'un des facteurs doit impérativement être égal à 1. Comme $n \\ge 0$, on a $n+1 < n+2$, donc seul $n+1$ peut valoir 1, ce qui donne $n = 0$. Si $n=0$, l'expression vaut $2$, qui est bien premier. La seule solution est donc $n = 0$."
