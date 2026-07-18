@@ -122,7 +122,7 @@
     var submitBtn = document.getElementById('submitBtn');
     var statusMessage = document.getElementById('statusMessage');
 
-    // CONFIGURATION DE VOTRE REPO (Pensez à adapter ces valeurs à votre projet)
+    // CONFIGURATION DE VOTRE REPO
     var GH_OWNER = "asduclavier"; 
     var GH_REPO = "Prob_Base";
     var FILE_PATH = "src/data/problems.json"; 
@@ -148,18 +148,30 @@
       .then(function(fileData) {
         var currentSha = fileData.sha;
         
-        // 1. Suppression des sauts de ligne / espaces introduits dans le Base64 de l'API
+        // 1. Nettoyage et conversion sécurisée du Base64 GitHub en tableau d'octets (Uint8Array)
         var cleanedBase64 = fileData.content.replace(/\s/g, '');
+        var binaryString = atob(cleanedBase64);
+        var bytes = new Uint8Array(binaryString.length);
+        for (var i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
         
-        // 2. Décodage propre et sécurisé du fichier UTF-8 base64
-        var currentContentText = decodeURIComponent(atob(cleanedBase64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        // 2. Décodage parfait en UTF-8 (gère les accents sans corrompre le texte)
+        var decoder = new TextDecoder('utf-8');
+        var currentContentText = decoder.decode(bytes);
         
-        // 3. Initialisation sécurisée du tableau si le contenu textuel est vide
+        // 3. Parsing du JSON existant avec garde-fou critique
         var currentProblems = [];
         if (currentContentText.trim() !== "") {
-          currentProblems = JSON.parse(currentContentText);
+          try {
+            currentProblems = JSON.parse(currentContentText);
+            // Sécurité absolue : si ce n'est pas un tableau, on arrête l'exécution pour ne rien effacer
+            if (!Array.isArray(currentProblems)) {
+              throw new Error("Le fichier JSON récupéré n'est pas un tableau valide.");
+            }
+          } catch(e) {
+            throw new Error("Erreur de lecture ou structure JSON invalide : " + e.message);
+          }
         }
 
         // Calcul automatique de l'ID suivant
@@ -194,8 +206,11 @@
 
         currentProblems.push(newProblem);
 
+        // 4. Ré-encodage strict en UTF-8 pour l'envoi
         var updatedJsonString = JSON.stringify(currentProblems, null, 2);
-        var base64Content = btoa(unescape(encodeURIComponent(updatedJsonString)));
+        var encoder = new TextEncoder();
+        var u8Array = encoder.encode(updatedJsonString);
+        var base64Content = btoa(String.fromCharCode.apply(null, u8Array));
 
         showStatus("Envoi du problème #" + nextId + " vers GitHub...", "");
 
