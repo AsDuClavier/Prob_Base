@@ -9,17 +9,25 @@ import problems from '../data/problems.json';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin - Éditeur de Problèmes</title>
   <style>
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
     .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { color: #2c3e50; text-align: center; }
-    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; position: relative; }
-    label { font-weight: bold; margin-bottom: 5px; color: #555; }
-    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; width: 100%; }
-    textarea { resize: vertical; min-height: 100px; font-family: monospace; }
-    .btn { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; }
+    h1 { color: #2c3e50; text-align: center; margin-top: 10px; }
+    
+    .form-group { margin-bottom: 18px; display: flex; flex-direction: column; position: relative; }
+    .form-row { display: flex; gap: 15px; }
+    .form-row .form-group { flex: 1; }
+    
+    label { font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+    textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+    
+    .btn { background: #27ae60; color: white; padding: 14px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-top: 10px; }
     .btn:hover { background: #219653; }
     .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
-    .status { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    
+    .status { margin-top: 15px; padding: 12px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
     .success { background: #d4edda; color: #155724; }
     .error { background: #f8d7da; color: #721c24; }
     .security-banner { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
@@ -85,28 +93,57 @@ import problems from '../data/problems.json';
     <!-- Formulaire d'édition -->
     <form id="editForm">
       <div class="form-group">
-        <label for="statement">Énoncé (supporte le LaTeX)</label>
+        <label for="statement">Énoncé du problème (LaTeX $ et $$ supportés)</label>
         <textarea id="statement" required></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="source">Source</label>
-        <input type="text" id="source" />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Catégorie</label>
+          <select id="category" required>
+            <option value="A">Algèbre (A)</option>
+            <option value="G">Géométrie (G)</option>
+            <option value="N">Théorie des nombres (N)</option>
+            <option value="C">Combinatoire (C)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="difficulty">Difficulté (1 à 11)</label>
+          <input type="number" id="difficulty" min="1" max="11" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="source">Source (Optionnel)</label>
+          <input type="text" id="source" />
+        </div>
+
+        <div class="form-group">
+          <label for="imageLink">Lien de l'image / figure (Optionnel)</label>
+          <input type="url" id="imageLink" placeholder="https://.../image.png" />
+        </div>
       </div>
 
       <div class="form-group">
-        <label for="category">Catégorie</label>
-        <select id="category" required>
-          <option value="A">Algèbre (A)</option>
-          <option value="G">Géométrie (G)</option>
-          <option value="N">Théorie des nombres (N)</option>
-          <option value="C">Combinatoire (C)</option>
-        </select>
+        <label for="hint1">Indice 1 (Optionnel)</label>
+        <textarea id="hint1"></textarea>
       </div>
 
       <div class="form-group">
-        <label for="difficulty">Difficulté</label>
-        <input type="number" id="difficulty" min="1" max="11" required />
+        <label for="hint2">Indice 2 (Optionnel)</label>
+        <textarea id="hint2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="solution">Solution rédigée (Optionnel)</label>
+        <textarea id="solution"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="solutionLink">Lien externe vers la solution (Optionnel)</label>
+        <input type="url" id="solutionLink" placeholder="https://aops.com/..." />
       </div>
 
       <button type="submit" class="btn" id="submitBtn" disabled>Enregistrer les modifications</button>
@@ -122,7 +159,6 @@ import problems from '../data/problems.json';
     const submitBtn = document.getElementById('submitBtn');
     const statusMessage = document.getElementById('statusMessage');
 
-    // CONFIGURATION AUTOMATIQUE DE VOTRE REPO
     const GH_OWNER = "AsDuClavier"; 
     const GH_REPO = "Prob_Base";
     const FILE_PATH = "src/data/problems.json";
@@ -139,7 +175,6 @@ import problems from '../data/problems.json';
         return;
       }
 
-      // Filtrer les problèmes par ID, Source ou Énoncé
       const matches = problems.filter(p => {
         const idMatch = p.id.toString() === query;
         const sourceMatch = p.Source && p.Source.toLowerCase().includes(query);
@@ -169,28 +204,32 @@ import problems from '../data/problems.json';
       }
     });
 
-    // Fermer les résultats si on clique en dehors
     document.addEventListener('click', (e) => {
       if (e.target !== probSearch && e.target !== searchResults) {
         searchResults.style.display = 'none';
       }
     });
 
-    // Fonction pour charger le problème sélectionné dans le formulaire
+    // Remplissage des champs lors de la sélection du problème
     function selectProblem(problem) {
       currentProblem = problem;
       probSearch.value = `[${problem.G}] ID ${problem.id} - ${problem.Source || 'Sans source'}`;
       searchResults.style.display = 'none';
 
       document.getElementById('statement').value = problem.statement || '';
-      document.getElementById('source').value = problem.Source || '';
       document.getElementById('category').value = problem.G || 'A';
       document.getElementById('difficulty').value = problem.D || 1;
+      document.getElementById('source').value = problem.Source || '';
+      document.getElementById('imageLink').value = problem["Image Link"] || '';
+      document.getElementById('hint1').value = problem["Hint 1"] || '';
+      document.getElementById('hint2').value = problem["Hint 2"] || '';
+      document.getElementById('solution').value = problem["Solution"] || '';
+      document.getElementById('solutionLink').value = problem["Solution Link"] || '';
       
       submitBtn.disabled = false;
     }
 
-    // Gestion de la soumission vers l'API GitHub
+    // Envoi des modifications à GitHub
     editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -214,15 +253,35 @@ import problems from '../data/problems.json';
         const fileData = await getRes.json();
         const currentSha = fileData.sha;
 
+        // Récupération et nettoyage des valeurs du formulaire
+        const statementVal = document.getElementById('statement').value;
+        const categoryVal = document.getElementById('category').value;
+        const difficultyVal = parseInt(document.getElementById('difficulty').value);
+        const sourceVal = document.getElementById('source').value.trim();
+        const imgVal = document.getElementById('imageLink').value.trim();
+        const h1Val = document.getElementById('hint1').value.trim();
+        const h2Val = document.getElementById('hint2').value.trim();
+        const solVal = document.getElementById('solution').value.trim();
+        const solLinkVal = document.getElementById('solutionLink').value.trim();
+
         const updatedProblems = problems.map(p => {
           if (p.id === currentProblem.id) {
-            return {
-              ...p,
-              statement: document.getElementById('statement').value,
-              Source: document.getElementById('source').value,
-              G: document.getElementById('category').value,
-              D: parseInt(document.getElementById('difficulty').value)
+            // Reconstitution propre du nœud JSON
+            const updatedP = {
+              id: p.id,
+              statement: statementVal,
+              G: categoryVal,
+              D: difficultyVal
             };
+
+            if (sourceVal) updatedP["Source"] = sourceVal;
+            if (imgVal) updatedP["Image Link"] = imgVal;
+            if (h1Val) updatedP["Hint 1"] = h1Val;
+            if (h2Val) updatedP["Hint 2"] = h2Val;
+            if (solVal) updatedP["Solution"] = solVal;
+            if (solLinkVal) updatedP["Solution Link"] = solLinkVal;
+
+            return updatedP;
           }
           return p;
         });
@@ -246,10 +305,17 @@ import problems from '../data/problems.json';
         if (putRes.ok) {
           showStatus(`Succès ! Le problème ${currentProblem.id} a été modifié sur GitHub. Le site va se mettre à jour d'ici 2-3 minutes.`, "success");
           
-          currentProblem.statement = document.getElementById('statement').value;
-          currentProblem.Source = document.getElementById('source').value;
-          currentProblem.G = document.getElementById('category').value;
-          currentProblem.D = parseInt(document.getElementById('difficulty').value);
+          // Mise à jour de la mémoire cache locale pour les recherches suivantes sans recharger
+          currentProblem.statement = statementVal;
+          currentProblem.G = categoryVal;
+          currentProblem.D = difficultyVal;
+          
+          if (sourceVal) currentProblem["Source"] = sourceVal; else delete currentProblem["Source"];
+          if (imgVal) currentProblem["Image Link"] = imgVal; else delete currentProblem["Image Link"];
+          if (h1Val) currentProblem["Hint 1"] = h1Val; else delete currentProblem["Hint 1"];
+          if (h2Val) currentProblem["Hint 2"] = h2Val; else delete currentProblem["Hint 2"];
+          if (solVal) currentProblem["Solution"] = solVal; else delete currentProblem["Solution"];
+          if (solLinkVal) currentProblem["Solution Link"] = solLinkVal; else delete currentProblem["Solution Link"];
         } else {
           const errorData = await putRes.json();
           throw new Error(errorData.message || "Erreur de sauvegarde.");
