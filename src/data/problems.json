@@ -11765,7 +11765,7 @@
     "G": "N",
     "D": 3,
     "T": "",
-    "statement": "There are $n$ natural numbers written on a board. In any move, we can erase $a,b$ and replace it with $\\gcd(a,b)$ and $\\text{lcm}(a,b) - \\gcd(a,b)$. Prove that all numbers on the board are equal after a finite number of moves.",
+    "statement": "There are $n$ natural numbers written on a board. In any move, we can erase $a,b$ and replace it with $\\gcd(a,b)$ and $\\text{lcm}(a,b) - \\gcd(a,b)$. Prove that in finite number of moves, all numbers in the board could be made to be equal .",
     "Hint 1": "Note that using that move repeatedly on \\((a,b)\\), we can change \\((a,b)\\) into \\((gcd(a,b),gcd(a,b))\\).",
     "Hint 2": "",
     "Hint 3": "",
