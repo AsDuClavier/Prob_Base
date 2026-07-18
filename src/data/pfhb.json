@@ -25,5 +25,11 @@
     "Hint 1": "Essayer d'effectuer un changement de variable astucieux en utilisant $abc = 1$, par exemple $a = \\frac{x}{y}$.",
     "Hint 2": "En posant $a = \\frac{x}{y}$, $b = \\frac{y}{z}$ et $c = \\frac{z}{x}$, l'inégalité se simplifie grandement.",
     "Solution": "Posons $a = \\frac{x}{y}$, $b = \\frac{y}{z}$ et $c = \\frac{z}{x}$ pour des réels positifs $x, y, z$. Le premier terme devient : $\\frac{1}{\\frac{x}{y} + \\frac{y}{z} + 1} = \\frac{yz}{xz + y2 + yz} \\le \\frac{z}{x+y+z}$ après majoration ou développement direct selon l'inégalité classique de Cauchy-Schwarz."
+  },
+  {
+    "id": 4,
+    "statement": "Soit $A$ et $B$ deux points distincts du plan et $G$ le point tel que $A$ soit le milieu de $[GB]$.\n\n1. Montrer que l'ensemble $(\\mathcal{C})$ des points $N$ du plan tels que $\\frac{NB}{NA}=\\sqrt{2}$ est un cercle de centre $G$ dont on précisera le rayon en fonction de $AB$.\n2. Soit $C$ un point de $(\\mathcal{C})$ et $(\\mathcal{L})$ l'ensemble des points $M$ du plan tels que $2MA^{2}-MB^{2}-MC^{2}=0$.\n   a. Montrer que le point $C$ appartient à $(\\mathcal{L})$.  \n   b. Montrer que pour tout point $M$ de $(\\mathcal{L})$, on a $\\vec{MC}\\cdot\\vec{CG}=0$.  \n   c. Déterminer et construire l'ensemble $(\\mathcal{L})$.",
+    "G": "1T",
+    "Source": "Concours FHB 2024, phase finale"
   }
 ]
