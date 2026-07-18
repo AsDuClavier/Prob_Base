@@ -175,6 +175,13 @@ const NIVEAU = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
+      // 1. Redirection au clic sur la carte vers le sous-dossier GitHub Pages
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+          const problemId = card.getAttribute('data-id');
+          window.location.href = `/Prob_Base/pbfhb/${problemId}`;
+        });
+      });
 
       // 2. Rendu KaTeX progressif pour les performances mobiles
       const mathTargets = Array.from(document.querySelectorAll('.math-target'));
