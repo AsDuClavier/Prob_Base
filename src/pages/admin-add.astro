@@ -122,10 +122,23 @@
     var submitBtn = document.getElementById('submitBtn');
     var statusMessage = document.getElementById('statusMessage');
 
-    // CONFIGURATION DE VOTRE REPO
     var GH_OWNER = "asduclavier"; 
     var GH_REPO = "Prob_Base";
     var FILE_PATH = "src/data/problems.json"; 
+
+    // Fonction utilitaire moderne pour encoder en base64 de manière asynchrone (évite le Stack Overflow)
+    function dataToBase64(text) {
+      return new Promise(function(resolve, reject) {
+        var blob = new Blob([text], { type: 'application/json;charset=utf-8;' });
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          var base64data = reader.result.split(',')[1];
+          resolve(base64data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
 
     addForm.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -141,14 +154,14 @@
       })
       .then(function(res) {
         if (!res.ok) {
-          throw new Error("Impossible d'accéder au dépôt GitHub. Vérifiez les droits de votre Token.");
+          throw new Error("Impossible d'accéder au dépôt GitHub. Vérifiez le fichier ou les droits du Token.");
         }
         return res.json();
       })
       .then(function(fileData) {
         var currentSha = fileData.sha;
         
-        // 1. Nettoyage et conversion sécurisée du Base64 GitHub en tableau d'octets (Uint8Array)
+        // 1. Nettoyage et conversion sécurisée du Base64 GitHub
         var cleanedBase64 = fileData.content.replace(/\s/g, '');
         var binaryString = atob(cleanedBase64);
         var bytes = new Uint8Array(binaryString.length);
@@ -156,25 +169,24 @@
           bytes[i] = binaryString.charCodeAt(i);
         }
         
-        // 2. Décodage parfait en UTF-8 (gère les accents sans corrompre le texte)
+        // 2. Décodage parfait en UTF-8
         var decoder = new TextDecoder('utf-8');
         var currentContentText = decoder.decode(bytes);
         
-        // 3. Parsing du JSON existant avec garde-fou critique
+        // 3. Parsing sécurisé du JSON existant
         var currentProblems = [];
         if (currentContentText.trim() !== "") {
           try {
             currentProblems = JSON.parse(currentContentText);
-            // Sécurité absolue : si ce n'est pas un tableau, on arrête l'exécution pour ne rien effacer
             if (!Array.isArray(currentProblems)) {
-              throw new Error("Le fichier JSON récupéré n'est pas un tableau valide.");
+              throw new Error("Le format du fichier JSON n'est pas un tableau.");
             }
           } catch(e) {
-            throw new Error("Erreur de lecture ou structure JSON invalide : " + e.message);
+            throw new Error("Erreur de décodage du JSON existant : " + e.message);
           }
         }
 
-        // Calcul automatique de l'ID suivant
+        // 4. Calcul automatique de l'ID suivant
         var nextId = 1;
         if (currentProblems.length > 0) {
           var ids = currentProblems.map(function(p) { return parseInt(p.id || 0); });
@@ -204,33 +216,40 @@
         if (solVal) newProblem["Solution"] = solVal;
         if (solLinkVal) newProblem["Solution Link"] = solLinkVal;
 
+        // Insertion à la suite
         currentProblems.push(newProblem);
 
-        // 4. Ré-encodage strict en UTF-8 pour l'envoi
+        // 5. Encodage lourd asynchrone (Zéro risque de perte de données ou crash)
         var updatedJsonString = JSON.stringify(currentProblems, null, 2);
-        var encoder = new TextEncoder();
-        var u8Array = encoder.encode(updatedJsonString);
-        var base64Content = btoa(String.fromCharCode.apply(null, u8Array));
+        showStatus("Préparation des données sécurisée...", "");
 
-        showStatus("Envoi du problème #" + nextId + " vers GitHub...", "");
+        return dataToBase64(updatedJsonString).then(function(base64Content) {
+          // Double vérification de garde-fou avant envoi
+          if (!base64Content || base64Content.length < 10) {
+            throw new Error("Erreur critique : Échec de la génération du contenu Base64.");
+          }
+          
+          showStatus("Envoi du problème #" + nextId + " vers GitHub...", "");
 
-        return fetch(url, {
-          method: 'PUT',
-          headers: {
-            "Authorization": "token " + token,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            message: "Ajout automatique du problème ID " + nextId + " via l'interface Admin",
-            content: base64Content,
-            sha: currentSha
-          })
+          return fetch(url, {
+            method: 'PUT',
+            headers: {
+              "Authorization": "token " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              message: "Ajout automatique du problème ID " + nextId + " via l'interface Admin",
+              content: base64Content,
+              sha: currentSha
+            })
+          });
         });
       })
       .then(function(putRes) {
+        if (!putRes) return; // Erreur interceptée plus haut
         if (putRes.ok) {
           showStatus("Bravo ! Le problème a été intégré avec succès. Le site va se mettre à jour d'ici 2 minutes.", "success");
-          var savedToken = token;
+          var savedToken = document.getElementById('ghToken').value.trim();
           addForm.reset();
           document.getElementById('ghToken').value = savedToken;
         } else {
