@@ -1,0 +1,240 @@
+---
+// Formulaire d'administration dédié à l'ajout des théorèmes
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Ajouter un Théorème</title>
+  <style>
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    
+    .nav-links { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .back-btn { display: inline-block; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    .back-btn:hover { background: #2c3e50; }
+
+    h1 { color: #2c7a7b; text-align: center; margin-top: 10px; }
+    .form-group { margin-bottom: 18px; display: flex; flex-direction: column; }
+    .form-row { display: flex; gap: 15px; }
+    .form-row .form-group { flex: 1; }
+    
+    label { font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+    textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+    
+    .btn { background: #319795; color: white; padding: 14px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-top: 10px; }
+    .btn:hover { background: #2c7a7b; }
+    .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+    
+    .status { margin-top: 15px; padding: 12px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .security-banner { background: #e6fffa; color: #234e52; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #319795; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="nav-links">
+      <a href="/Prob_Base/" class="back-btn">← Accueil</a>
+    </div>
+
+    <h1>Ajouter un nouveau théorème</h1>
+    
+    <div class="security-banner">
+      <strong>Section Théorèmes :</strong> Remplissez les champs ci-dessous pour publier directement un théorème ou une propriété clé dans le fichier <code>theorems.json</code> de votre dépôt GitHub.
+    </div>
+
+    <form id="addTheoremForm">
+      <div class="form-group">
+        <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
+        <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" required />
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+
+      <div class="form-group">
+        <label for="title">Titre du théorème / de la propriété</label>
+        <input type="text" id="title" placeholder="ex: Théorème des Restes Chinois" required />
+      </div>
+
+      <div class="form-group">
+        <label for="statement">Énoncé théorique (LaTeX $ et $$ pleinement supportés)</label>
+        <textarea id="statement" placeholder="Soient a et b deux entiers premiers entre eux..." required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Catégorie mathématique</label>
+          <select id="category" required>
+            <option value="A">Algèbre (A)</option>
+            <option value="G">Géométrie (G)</option>
+            <option value="N">Théorie des nombres (N)</option>
+            <option value="C">Combinatoire (C)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="source">Source de référence (Optionnel)</label>
+          <input type="text" id="source" placeholder="ex: Olympiades de mathématiques, Lemme classique" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Créer et publier le théorème</button>
+    </form>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script is:inline>
+    var addForm = document.getElementById('addTheoremForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var statusMessage = document.getElementById('statusMessage');
+
+    var GH_OWNER = "asduclavier"; 
+    var GH_REPO = "Prob_Base";
+    var FILE_PATH = "src/data/theorems.json"; 
+
+    // Encodeur Base64 UTF-8 sécurisé
+    function dataToBase64(text) {
+      return new Promise(function(resolve, reject) {
+        var blob = new Blob([text], { type: 'application/json;charset=utf-8;' });
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          resolve(reader.result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    addForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      var token = document.getElementById('ghToken').value.trim();
+      submitBtn.disabled = true;
+      showStatus("Récupération du fichier theorems.json sur GitHub...", "");
+
+      var contentUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + FILE_PATH;
+      var currentSha = "";
+
+      // Étape 1 : Récupération du SHA via l'API Contents
+      fetch(contentUrl, { headers: { "Authorization": "token " + token } })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Impossible d'accéder au fichier sur le dépôt. Vérifiez la présence de 'src/data/theorems.json'.");
+        return res.json();
+      })
+      .then(function(metaData) {
+        currentSha = metaData.sha;
+        showStatus("Téléchargement du fichier existant (Méthode Git Blobs)...", "");
+        
+        // Étape 2 : Récupération du contenu complet via Git Blobs
+        var blobUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/git/blobs/" + currentSha;
+        return fetch(blobUrl, { headers: { "Authorization": "token " + token } });
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Échec du téléchargement du contenu brut.");
+        return res.json();
+      })
+      .then(function(blobData) {
+        if (!blobData.content) {
+          throw new Error("Le contenu retourné par GitHub est vide.");
+        }
+
+        // Décodage UTF-8 sécurisé
+        var cleanedBase64 = blobData.content.replace(/\s/g, '');
+        var binaryString = atob(cleanedBase64);
+        var bytes = new Uint8Array(binaryString.length);
+        for (var i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        var decoder = new TextDecoder('utf-8');
+        var currentContentText = decoder.decode(bytes);
+        
+        var currentTheorems = [];
+        if (currentContentText.trim() !== "") {
+          currentTheorems = JSON.parse(currentContentText);
+          if (!Array.isArray(currentTheorems)) {
+            throw new Error("Données corrompues : Le JSON distant ne contient pas un tableau [].");
+          }
+        } else {
+          throw new Error("Opération annulée : Le fichier distant a été lu comme vide.");
+        }
+
+        // Calcul automatique de l'ID du théorème
+        var nextId = 1;
+        if (currentTheorems.length > 0) {
+          var ids = currentTheorems.map(function(t) { return parseInt(t.id || 0); });
+          nextId = Math.max.apply(null, ids) + 1;
+        }
+
+        // Création de l'objet théorème
+        var sourceVal = document.getElementById('source').value.trim();
+        var newTheorem = {
+          id: nextId,
+          title: document.getElementById('title').value.trim(),
+          statement: document.getElementById('statement').value.trim(),
+          G: document.getElementById('category').value
+        };
+
+        if (sourceVal) newTheorem["Source"] = sourceVal;
+
+        currentTheorems.push(newTheorem);
+
+        var updatedJsonString = JSON.stringify(currentTheorems, null, 2);
+        showStatus("Mise en forme des données...", "");
+
+        return dataToBase64(updatedJsonString);
+      })
+      .then(function(base64Content) {
+        showStatus("Envoi des modifications à GitHub...", "");
+
+        // Étape 3 : Mise à jour du fichier avec un PUT
+        return fetch(contentUrl, {
+          method: 'PUT',
+          headers: {
+            "Authorization": "token " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: "Ajout automatique de théorème via l'interface Admin",
+            content: base64Content,
+            sha: currentSha
+          })
+        });
+      })
+      .then(function(putRes) {
+        if (!putRes) return;
+        if (putRes.ok) {
+          showStatus("Génial ! Le théorème a été ajouté avec succès sans corrompre le fichier.", "success");
+          var savedToken = token;
+          addForm.reset();
+          document.getElementById('ghToken').value = savedToken;
+        } else {
+          return putRes.json().then(function(errData) {
+            throw new Error(errData.message || "Erreur de mise à jour.");
+          });
+        }
+      })
+      .catch(function(err) {
+        showStatus("Erreur : " + err.message, "error");
+        console.error(err);
+      })
+      .finally(function() {
+        submitBtn.disabled = false;
+      });
+    });
+
+    function showStatus(msg, type) {
+      statusMessage.innerText = msg;
+      statusMessage.className = "status " + (type || "");
+      statusMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
