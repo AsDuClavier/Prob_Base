@@ -37566,6 +37566,7 @@
     "statement": "Ingrid and Erik are playing a game. For a given odd prime $p$, the numbers $1, 2, 3, ..., p-1$ are written on a blackboard. The players take turns making moves with Ingrid starting. A move consists of one of the players crossing out a number on the board that has not yet been crossed out. If the product of all currently crossed out numbers is $1 \\pmod p$ after the move, the player whose move it was receives one point, otherwise, zero points are awarded. The game ends after all numbers have been crossed out.\n\nThe player who has received the most points by the end of the game wins. If both players have the same score, the game ends in a draw. For each $p$, determine which player (if any) has a winning strategy",
     "G": "N",
     "D": 5,
-    "Solution Link": "https://artofproblemsolving.com/community/c6h2959317p26503879"
+    "Solution Link": "https://artofproblemsolving.com/community/c6h2959317p26503879",
+    "Source": "Baltic Way 2022, Problem 20"
   }
 ]
