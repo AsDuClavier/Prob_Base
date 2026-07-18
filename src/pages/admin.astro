@@ -12,17 +12,51 @@ import problems from '../data/problems.json';
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
     .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     h1 { color: #2c3e50; text-align: center; }
-    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; position: relative; }
     label { font-weight: bold; margin-bottom: 5px; color: #555; }
-    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; width: 100%; }
     textarea { resize: vertical; min-height: 100px; font-family: monospace; }
-    .btn { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    .btn { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; }
     .btn:hover { background: #219653; }
     .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
     .status { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
     .success { background: #d4edda; color: #155724; }
     .error { background: #f8d7da; color: #721c24; }
     .security-banner { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+    
+    /* Styles pour la barre de recherche et ses résultats */
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .search-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-item:hover {
+      background: #f0f2f5;
+      color: #2980b9;
+    }
+    .search-item strong {
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body>
@@ -39,20 +73,16 @@ import problems from '../data/problems.json';
       <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
     </div>
 
-    <!-- Choix du problème -->
+    <!-- Barre de recherche dynamique -->
     <div class="form-group">
-      <label for="probSelect">Choisir le problème à modifier</label>
-      <select id="probSelect">
-        <option value="">-- Sélectionnez un problème --</option>
-        {problems.map((p) => (
-          <option value={p.id}>[{p.G}] ID {p.id} - {p.Source || "Sans Source"}</option>
-        ))}
-      </select>
+      <label for="probSearch">Rechercher le problème à modifier</label>
+      <input type="text" id="probSearch" placeholder="Tapez un ID, une source (ex: IMO) ou un mot-clé..." autocomplete="off" />
+      <div id="searchResults" class="search-results"></div>
     </div>
 
     <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;" />
 
-    <!-- Formulaire d'édition (bloqué par défaut tant qu'aucun problème n'est sélectionné) -->
+    <!-- Formulaire d'édition -->
     <form id="editForm">
       <div class="form-group">
         <label for="statement">Énoncé (supporte le LaTeX)</label>
@@ -86,36 +116,81 @@ import problems from '../data/problems.json';
   </div>
 
   <script is:inline define:vars={{ problems }}>
-    // Récupération des éléments du DOM
-    const probSelect = document.getElementById('probSelect');
+    const probSearch = document.getElementById('probSearch');
+    const searchResults = document.getElementById('searchResults');
     const editForm = document.getElementById('editForm');
     const submitBtn = document.getElementById('submitBtn');
     const statusMessage = document.getElementById('statusMessage');
 
+    // CONFIGURATION AUTOMATIQUE DE VOTRE REPO
     const GH_OWNER = "AsDuClavier"; 
     const GH_REPO = "Prob_Base";
-    const FILE_PATH = "src/data/problems.json"; 
+    const FILE_PATH = "src/data/problems.json";
 
     let currentProblem = null;
 
-    // Remplissage automatique du formulaire lorsqu'on sélectionne un problème
-    probSelect.addEventListener('change', (e) => {
-      const id = parseInt(e.target.value);
-      currentProblem = problems.find(p => p.id === id);
+    // Logique de recherche dynamique
+    probSearch.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      searchResults.innerHTML = '';
 
-      if (currentProblem) {
-        document.getElementById('statement').value = currentProblem.statement || '';
-        document.getElementById('source').value = currentProblem.Source || '';
-        document.getElementById('category').value = currentProblem.G || 'A';
-        document.getElementById('difficulty').value = currentProblem.D || 1;
-        submitBtn.disabled = false;
+      if (!query) {
+        searchResults.style.display = 'none';
+        return;
+      }
+
+      // Filtrer les problèmes par ID, Source ou Énoncé
+      const matches = problems.filter(p => {
+        const idMatch = p.id.toString() === query;
+        const sourceMatch = p.Source && p.Source.toLowerCase().includes(query);
+        const statementMatch = p.statement && p.statement.toLowerCase().includes(query);
+        return idMatch || sourceMatch || statementMatch;
+      }).slice(0, 10);
+
+      if (matches.length > 0) {
+        matches.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          div.innerHTML = `<strong>[${p.G}] ID ${p.id}</strong> - ${p.Source || 'Sans source'} — <span>${p.statement || ''}</span>`;
+          
+          div.addEventListener('click', () => {
+            selectProblem(p);
+          });
+          searchResults.appendChild(div);
+        });
+        searchResults.style.display = 'block';
       } else {
-        editForm.reset();
-        submitBtn.disabled = true;
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.style.color = '#888';
+        div.innerText = 'Aucun problème trouvé';
+        searchResults.appendChild(div);
+        searchResults.style.display = 'block';
       }
     });
 
-    // Gestion de la soumission du formulaire et interaction avec l'API GitHub
+    // Fermer les résultats si on clique en dehors
+    document.addEventListener('click', (e) => {
+      if (e.target !== probSearch && e.target !== searchResults) {
+        searchResults.style.display = 'none';
+      }
+    });
+
+    // Fonction pour charger le problème sélectionné dans le formulaire
+    function selectProblem(problem) {
+      currentProblem = problem;
+      probSearch.value = `[${problem.G}] ID ${problem.id} - ${problem.Source || 'Sans source'}`;
+      searchResults.style.display = 'none';
+
+      document.getElementById('statement').value = problem.statement || '';
+      document.getElementById('source').value = problem.Source || '';
+      document.getElementById('category').value = problem.G || 'A';
+      document.getElementById('difficulty').value = problem.D || 1;
+      
+      submitBtn.disabled = false;
+    }
+
+    // Gestion de la soumission vers l'API GitHub
     editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -129,18 +204,16 @@ import problems from '../data/problems.json';
       showStatus("Synchronisation avec GitHub en cours...", "");
 
       try {
-        // 1. Demander à GitHub le SHA actuel du fichier JSON (requis pour pouvoir écraser un fichier)
         const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
         const getRes = await fetch(url, {
           headers: { "Authorization": `token ${token}` }
         });
 
-        if (!getRes.ok) throw new Error("Impossible de récupérer les métadonnées du fichier sur GitHub. Vérifiez votre token ou vos droits.");
+        if (!getRes.ok) throw new Error("Impossible de joindre GitHub. Vérifiez votre token ou vos droits sur le dépôt.");
         
         const fileData = await getRes.json();
         const currentSha = fileData.sha;
 
-        // 2. Mettre à jour localement le tableau de données avec les modifications du formulaire
         const updatedProblems = problems.map(p => {
           if (p.id === currentProblem.id) {
             return {
@@ -154,11 +227,9 @@ import problems from '../data/problems.json';
           return p;
         });
 
-        // 3. Convertir le tableau mis à jour en texte JSON propre et l'encoder en Base64 (exigé par GitHub)
         const jsonString = JSON.stringify(updatedProblems, null, 2);
         const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
 
-        // 4. Envoyer le fichier mis à jour vers l'API GitHub via une requête PUT
         const putRes = await fetch(url, {
           method: 'PUT',
           headers: {
@@ -173,15 +244,15 @@ import problems from '../data/problems.json';
         });
 
         if (putRes.ok) {
-          showStatus(`Succès ! Le problème ${currentProblem.id} a été modifié sur GitHub. Le site va se mettre à jour dans 2-3 minutes.`, "success");
-          // On met à jour la variable globale locale au cas où l'admin fait une autre édition à la suite
+          showStatus(`Succès ! Le problème ${currentProblem.id} a été modifié sur GitHub. Le site va se mettre à jour d'ici 2-3 minutes.`, "success");
+          
           currentProblem.statement = document.getElementById('statement').value;
           currentProblem.Source = document.getElementById('source').value;
           currentProblem.G = document.getElementById('category').value;
           currentProblem.D = parseInt(document.getElementById('difficulty').value);
         } else {
           const errorData = await putRes.json();
-          throw new Error(errorData.message || "Erreur lors de la sauvegarde sur GitHub.");
+          throw new Error(errorData.message || "Erreur de sauvegarde.");
         }
 
       } catch (err) {
