@@ -1,4 +1,5 @@
-
+---
+// Fichier d'administration pour l'ajout de problèmes
 ---
 
 <!DOCTYPE html>
@@ -40,18 +41,15 @@
   <div class="admin-container">
     <div class="nav-links">
       <a href="/Prob_Base/" class="back-btn">← Accueil</a>
-      <!-- Lien optionnel vers votre page de modification si vous l'avez nommée admin.astro -->
-      <a href="/Prob_Base/admin" class="back-btn" style="background:#8e44ad;">Mode Édition →</a>
     </div>
 
     <h1>Ajouter un nouveau problème</h1>
     
     <div class="security-banner">
-      <strong>Mode d'emploi :</strong> Remplissez les champs ci-dessous. Le script se chargera de calculer le bon ID et d'insérer le problème à la suite dans votre fichier JSON sur GitHub.
+      <strong>Mode d'emploi :</strong> Remplissez les champs ci-dessous. Le script calculera le bon ID et insérera le problème à la suite dans votre fichier JSON sur GitHub.
     </div>
 
     <form id="addForm">
-      <!-- Authentification GitHub en local -->
       <div class="form-group">
         <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
         <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" required />
@@ -59,13 +57,11 @@
 
       <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
 
-      <!-- Énoncé -->
       <div class="form-group">
-        <label for="statement">Énoncé du problème (Supporte le LaTeX $ et $$)</label>
-        <textarea id="statement" placeholder="Soit $ABC$ un triangle..." required></textarea>
+        <label for="statement">Énoncé du problème (LaTeX $ et $$ supportés)</label>
+        <textarea id="statement" placeholder="Soit ABC un triangle..." required></textarea>
       </div>
 
-      <!-- Métadonnées principales -->
       <div class="form-row">
         <div class="form-group">
           <label for="category">Catégorie</label>
@@ -83,7 +79,6 @@
         </div>
       </div>
 
-      <!-- Source & Image -->
       <div class="form-row">
         <div class="form-group">
           <label for="source">Source (Optionnel)</label>
@@ -92,11 +87,10 @@
 
         <div class="form-group">
           <label for="imageLink">Lien de l'image / figure (Optionnel)</label>
-          <input type="url" id="imageLink" placeholder="ex: https://.../image.png" />
+          <input type="url" id="imageLink" placeholder="https://.../image.png" />
         </div>
       </div>
 
-      <!-- Indices -->
       <div class="form-group">
         <label for="hint1">Indice 1 (Optionnel)</label>
         <textarea id="hint1" placeholder="Penser à utiliser le principe des tiroirs..."></textarea>
@@ -107,7 +101,6 @@
         <textarea id="hint2" placeholder="Regarder modulo 4..."></textarea>
       </div>
 
-      <!-- Solutions -->
       <div class="form-group">
         <label for="solution">Solution rédigée (Optionnel)</label>
         <textarea id="solution" placeholder="Par le théorème de..."></textarea>
@@ -115,7 +108,7 @@
 
       <div class="form-group">
         <label for="solutionLink">Lien externe vers la solution (Optionnel)</label>
-        <input type="url" id="solutionLink" placeholder="ex: https://aoops.com/..." />
+        <input type="url" id="solutionLink" placeholder="https://aops.com/..." />
       </div>
 
       <button type="submit" class="btn" id="submitBtn">Créer et publier le problème</button>
@@ -125,104 +118,116 @@
   </div>
 
   <script is:inline>
-    const addForm = document.getElementById('addForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusMessage = document.getElementById('statusMessage');
+    var addForm = document.getElementById('addForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var statusMessage = document.getElementById('statusMessage');
 
-    const GH_OWNER = "AsDuClavier"; 
-    const GH_REPO = "Prob_Base";
-    const FILE_PATH = "src/data/problems.json"; 
+    // CONFIGURATION DE VOTRE REPO (Pensez à adapter ces valeurs à votre projet)
+    var GH_OWNER = "asduclavier"; 
+    var GH_REPO = "Prob_Base";
+    var FILE_PATH = "src/data/problems.json"; 
 
-    addForm.addEventListener('submit', async (e) => {
+    addForm.addEventListener('submit', function(e) {
       e.preventDefault();
       
-      const token = document.getElementById('ghToken').value.trim();
+      var token = document.getElementById('ghToken').value.trim();
       submitBtn.disabled = true;
       showStatus("Connexion à GitHub et récupération du fichier de données...", "");
 
-      try {
-        // 1. Récupérer le fichier actuel en ligne pour avoir le SHA récent et TOUTES les données à jour
-        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
-        const getRes = await fetch(url, {
-          headers: { "Authorization": `token ${token}` }
-        });
+      var url = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + FILE_PATH;
 
-        if (!getRes.ok) throw new Error("Impossible d'accéder à votre dépôt GitHub. Vérifiez votre Token ou vos droits d'accès.");
+      fetch(url, {
+        headers: { "Authorization": "token " + token }
+      })
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error("Impossible d'accéder au dépôt GitHub. Vérifiez les droits de votre Token.");
+        }
+        return res.json();
+      })
+      .then(function(fileData) {
+        var currentSha = fileData.sha;
         
-        const fileData = await getRes.json();
-        const currentSha = fileData.sha;
-        
-        // Décoder le JSON existant (gère correctement les caractères accentués UTF-8)
-        const currentContentText = decodeURIComponent(atob(fileData.content).split('').map(function(c) {
+        // Décodage propre et sécurisé du fichier UTF-8 base64
+        var currentContentText = decodeURIComponent(atob(fileData.content).split('').map(function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         
-        const currentProblems = JSON.parse(currentContentText);
+        var currentProblems = JSON.parse(currentContentText);
 
-        // 2. Calculer automatiquement le nouvel ID incrémenté
-        const nextId = currentProblems.length > 0 
-          ? Math.max(...currentProblems.map(p => parseInt(p.id || 0))) + 1 
-          : 1;
+        // Calcul automatique de l'ID suivant
+        var nextId = 1;
+        if (currentProblems.length > 0) {
+          var ids = currentProblems.map(function(p) { return parseInt(p.id || 0); });
+          nextId = Math.max.apply(null, ids) + 1;
+        }
 
-        // 3. Construire le nouvel objet Problème en respectant exactement votre structure
-        const newProblem = {
+        // Récupération des valeurs du formulaire
+        var sourceVal = document.getElementById('source').value.trim();
+        var imgVal = document.getElementById('imageLink').value.trim();
+        var h1Val = document.getElementById('hint1').value.trim();
+        var h2Val = document.getElementById('hint2').value.trim();
+        var solVal = document.getElementById('solution').value.trim();
+        var solLinkVal = document.getElementById('solutionLink').value.trim();
+
+        // Nouveau problème structuré
+        var newProblem = {
           id: nextId,
           statement: document.getElementById('statement').value,
           G: document.getElementById('category').value,
-          D: parseInt(document.getElementById('difficulty').value),
-          Source: document.getElementById('source').value || undefined,
-          "Image Link": document.getElementById('imageLink').value || undefined,
-          "Hint 1": document.getElementById('hint1').value || undefined,
-          "Hint 2": document.getElementById('hint2').value || undefined,
-          Solution: document.getElementById('solution').value || undefined,
-          "Solution Link": document.getElementById('solutionLink').value || undefined
+          D: parseInt(document.getElementById('difficulty').value)
         };
 
-        // 4. Ajouter le problème au tableau existant
+        if (sourceVal) newProblem["Source"] = sourceVal;
+        if (imgVal) newProblem["Image Link"] = imgVal;
+        if (h1Val) newProblem["Hint 1"] = h1Val;
+        if (h2Val) newProblem["Hint 2"] = h2Val;
+        if (solVal) newProblem["Solution"] = solVal;
+        if (solLinkVal) newProblem["Solution Link"] = solLinkVal;
+
         currentProblems.push(newProblem);
 
-        // 5. Re-convertir en texte et ré-encoder en Base64
-        const updatedJsonString = JSON.stringify(currentProblems, null, 2);
-        const base64Content = btoa(unescape(encodeURIComponent(updatedJsonString)));
+        var updatedJsonString = JSON.stringify(currentProblems, null, 2);
+        var base64Content = btoa(unescape(encodeURIComponent(updatedJsonString)));
 
-        // 6. Envoyer le fichier mis à jour vers GitHub
-        showStatus(`Envoi du problème #${nextId} vers GitHub...`, "");
-        const putRes = await fetch(url, {
+        showStatus("Envoi du problème #" + nextId + " vers GitHub...", "");
+
+        return fetch(url, {
           method: 'PUT',
           headers: {
-            "Authorization": `token ${token}`,
+            "Authorization": "token " + token,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            message: `Ajout automatique du problème ID ${nextId} via l'interface Admin`,
+            message: "Ajout automatique du problème ID " + nextId + " via l'interface Admin",
             content: base64Content,
             sha: currentSha
           })
         });
-
+      })
+      .then(function(putRes) {
         if (putRes.ok) {
-          showStatus(`Bravo ! Le problème #${nextId} a été intégré. Le site va se recompiler dans 2-3 minutes.`, "success");
-          
-          // Réinitialiser le formulaire (sauf le token pour pouvoir enchaîner les ajouts)
-          const savedToken = token;
+          showStatus("Bravo ! Le problème a été intégré avec succès. Le site va se mettre à jour d'ici 2 minutes.", "success");
+          var savedToken = token;
           addForm.reset();
           document.getElementById('ghToken').value = savedToken;
         } else {
-          const errorData = await putRes.json();
-          throw new Error(errorData.message || "Erreur lors de la sauvegarde.");
+          return putRes.json().then(function(errData) {
+            throw new Error(errData.message || "Erreur lors de la mise à jour globale.");
+          });
         }
-
-      } catch (err) {
+      })
+      .catch(function(err) {
         showStatus("Erreur : " + err.message, "error");
-      } finally {
+      })
+      .finally(function() {
         submitBtn.disabled = false;
-      }
+      });
     });
 
     function showStatus(msg, type) {
       statusMessage.innerText = msg;
-      statusMessage.className = "status";
-      if (type) statusMessage.classList.add(type);
+      statusMessage.className = "status " + (type || "");
       statusMessage.style.display = "block";
     }
   </script>
