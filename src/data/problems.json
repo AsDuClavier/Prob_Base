@@ -28575,10 +28575,12 @@
   },
   {
     "id": 641,
-    "statement": "Let $a$ and $b$ be positive integers, and let $p \\equiv 3 \\pmod{4}$ be a prime. Suppose $p$ divides $n=a^2+b^2$. Prove that $n$ is a multiple of $p^2$. ",
+    "Source": "Fermat's Christmas Theorem (adapted)",
     "G": "N",
     "D": 2,
-    "Source": "Fermat's Christmas Theorem (adapted)"
+    "T": "",
+    "statement": "Let $a$ and $b$ be positive integers, and let $p \\equiv 3 \\pmod{4}$ be a prime. Suppose $p$ divides $n=a^2+b^2$. Prove that $n$ is a multiple of $p^2$. ",
+    "Hint 3": ""
   },
   {
     "id": 640,
@@ -33370,17 +33372,10 @@
   },
   {
     "id": 298,
-    "Source": "2019 Korea MO, Intermediate Q4 of 8",
-    "G": "N",
-    "D": 5,
-    "T": "SE",
     "statement": "For any positive integer $n$, the sequence of positive integers $a_1, a_2, \\dots, a_n, \\dots$ satisfies the following inequality:\n$$\\left ( a_1 + a_2 + \\dots + a_n \\right ) \\left ( \\frac{1}{a_1} + \\frac{1}{a_2} + \\dots + \\frac{1}{a_n} \\right ) \\leq n^2 + 2019.$$\nShow that this is a constant sequence.",
-    "Hint 1": "",
-    "Hint 2": "",
-    "Hint 3": "",
-    "Solution": "",
-    "Solution Link": "",
-    "Image Link": ""
+    "G": "N",
+    "D": 4,
+    "Source": "2019 Korea MO, Intermediate Q4 of 8"
   },
   {
     "id": 297,
