@@ -28,9 +28,13 @@ const CATEGORIES = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Problème #{prob.id} - Prob Base</title>
   
+  <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Parseur Markdown (Ajouté pour l'Option 2) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     html { scrollbar-gutter: stable; }
@@ -70,6 +74,11 @@ const CATEGORIES = {
     /* Protection globale contre les débordements KaTeX */
     .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; width: 100%; }
     .katex { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+    /* Ajustements pour le Markdown parsé dans la solution */
+    .sol-markdown h3 { margin-top: 15px; margin-bottom: 10px; color: #2c3e50; }
+    .sol-markdown hr { border: 0; border-top: 1px solid #e67e22; margin: 15px 0; opacity: 0.3; }
+    .sol-markdown p { margin-bottom: 10px; }
 
     /* --- OPTIMISATIONS RESPONSIVES MOBILES --- */
     @media (max-width: 600px) {
@@ -127,7 +136,8 @@ const CATEGORIES = {
     {prob.Solution && (
       <div class="drawer drawer-sol" id="sol-indiv">
         <p><strong>Solution officielle :</strong></p>
-        <div>{prob.Solution}</div>
+        <!-- Ajout de la classe sol-markdown pour le ciblage JS -->
+        <div class="sol-markdown">{prob.Solution}</div>
         {prob["Solution Link"] && prob["Solution Link"] !== "" && (
           <a href={prob["Solution Link"]} target="_blank" rel="noopener noreferrer" class="ext-link">
             Consulter la solution externe ↗
@@ -139,6 +149,14 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
+      // 1. Convertir le Markdown en HTML propre d'abord (Nouveauté Option 2)
+      const solContainer = document.querySelector('.sol-markdown');
+      if (solContainer && typeof marked.parse === 'function') {
+        const rawMarkdown = solContainer.textContent || solContainer.innerText;
+        solContainer.innerHTML = marked.parse(rawMarkdown);
+      }
+
+      // 2. Gestion de l'affichage des tiroirs (Toggle)
       document.querySelectorAll('.btn-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-toggle');
@@ -158,6 +176,7 @@ const CATEGORIES = {
         });
       });
 
+      // 3. Rendu final des formules KaTeX sur le HTML propre
       if (typeof renderMathInElement === 'function') {
         renderMathInElement(document.body, {
           delimiters: [
