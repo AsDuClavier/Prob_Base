@@ -64,18 +64,13 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="category">Catégorie</label>
+          <label for="category">Niveau</label>
           <select id="category" required>
-            <option value="A">Algèbre (A)</option>
-            <option value="G">Géométrie (G)</option>
-            <option value="N">Théorie des nombres (N)</option>
-            <option value="C">Combinatoire (C)</option>
+            <option value="65">6e/5e</option>
+            <option value="43">4e/3e</option>
+            <option value="2">2nde</option>
+            <option value="1T">1ère/Tle</option>
           </select>
-        </div>
-
-        <div class="form-group">
-          <label for="difficulty">Difficulté (1 à 11)</label>
-          <input type="number" id="difficulty" min="1" max="11" value="1" required />
         </div>
       </div>
 
@@ -83,11 +78,6 @@
         <div class="form-group">
           <label for="source">Source (Optionnel)</label>
           <input type="text" id="source" placeholder="ex: IMO 2026, Shortlist" />
-        </div>
-
-        <div class="form-group">
-          <label for="imageLink">Lien de l'image / figure (Optionnel)</label>
-          <input type="url" id="imageLink" placeholder="https://.../image.png" />
         </div>
       </div>
 
@@ -106,11 +96,6 @@
         <textarea id="solution" placeholder="Par le théorème de..."></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="solutionLink">Lien externe vers la solution (Optionnel)</label>
-        <input type="url" id="solutionLink" placeholder="https://aops.com/..." />
-      </div>
-
       <button type="submit" class="btn" id="submitBtn">Créer et publier le problème</button>
     </form>
 
@@ -125,7 +110,7 @@
     // CONFIGURATION DE VOTRE REPO (Pensez à adapter ces valeurs à votre projet)
     var GH_OWNER = "asduclavier"; 
     var GH_REPO = "Prob_Base";
-    var FILE_PATH = "src/data/problems.json"; 
+    var FILE_PATH = "src/data/fhb.json"; 
 
     addForm.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -164,26 +149,25 @@
 
         // Récupération des valeurs du formulaire
         var sourceVal = document.getElementById('source').value.trim();
-        var imgVal = document.getElementById('imageLink').value.trim();
         var h1Val = document.getElementById('hint1').value.trim();
         var h2Val = document.getElementById('hint2').value.trim();
         var solVal = document.getElementById('solution').value.trim();
-        var solLinkVal = document.getElementById('solutionLink').value.trim();
+        
 
         // Nouveau problème structuré
         var newProblem = {
           id: nextId,
           statement: document.getElementById('statement').value,
           G: document.getElementById('category').value,
-          D: parseInt(document.getElementById('difficulty').value)
-        };
+          
+         };
 
         if (sourceVal) newProblem["Source"] = sourceVal;
-        if (imgVal) newProblem["Image Link"] = imgVal;
+        
         if (h1Val) newProblem["Hint 1"] = h1Val;
         if (h2Val) newProblem["Hint 2"] = h2Val;
         if (solVal) newProblem["Solution"] = solVal;
-        if (solLinkVal) newProblem["Solution Link"] = solLinkVal;
+        
 
         currentProblems.push(newProblem);
 
