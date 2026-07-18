@@ -21630,20 +21630,6 @@
     "Image Link": ""
   },
   {
-    "id": 1137,
-    "Source": "2000 IMOSL, N1",
-    "G": "N",
-    "D": 4,
-    "T": "",
-    "statement": "Determine all positive integers $ n\\geq 2$ that satisfy the following condition: for all $ a$ and $ b$ relatively prime to $ n$ we have\\[a \\equiv b \\pmod n\\qquad\\text{if and only if}\\qquad ab\\equiv 1 \\pmod n.\\]",
-    "Hint 1": "",
-    "Hint 2": "",
-    "Hint 3": "",
-    "Solution": "",
-    "Solution Link": "",
-    "Image Link": ""
-  },
-  {
     "id": 1136,
     "Source": "2022 ARML Local Indiv P 6 of 10",
     "G": "C",
