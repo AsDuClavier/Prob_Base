@@ -9,25 +9,7 @@
     "Solution": "On factorise : $n^2 + 3n + 2 = (n+1)(n+2)$. Pour que ce produit soit un nombre premier, l'un des facteurs doit impérativement être égal à 1. Comme $n \\ge 0$, on a $n+1 < n+2$, donc seul $n+1$ peut valoir 1, ce qui donne $n = 0$. Si $n=0$, l'expression vaut $2$, qui est bien premier. La seule solution est donc $n = 0$."
   },
   {
-    "id": "2",
-    "G": "43",
-    "Source": "Olympiade Junior",
-    "statement": "Dans un triangle $ABC$ rectangle en $A$, on trace la hauteur $[AH]$. Si $BH = 4$ cm et $CH = 9$ cm, calculez la longueur du segment $[AH]$.",
-    "Hint 1": "Utilisez les propriétés des triangles semblables ou le théorème de la hauteur.",
-    "Hint 2": "Rappelez-vous que $AH^2 = BH \\times CH$.",
-    "Solution": "Le triangle $ABC$ étant rectangle en $A$ et $[AH]$ sa hauteur, le théorème de la hauteur dans le triangle rectangle nous dit que $AH^2 = BH \\times CH$. En injectant les valeurs, on obtient $AH^2 = 4 \\times 9 = 36$. La longueur étant une valeur positive, $AH = \\sqrt{36} = 6$ cm."
-  },
-  {
-    "id": "3",
-    "G": "1T",
-    "Source": "Amicale Mathématique",
-    "statement": "Soient $a, b, c$ trois nombres réels strictement positifs tels que $abc = 1$. Démontrer que $\\frac{1}{a+b+1} + \\frac{1}{b+c+1} + \\frac{1}{c+a+1} \\le 1$.",
-    "Hint 1": "Essayer d'effectuer un changement de variable astucieux en utilisant $abc = 1$, par exemple $a = \\frac{x}{y}$.",
-    "Hint 2": "En posant $a = \\frac{x}{y}$, $b = \\frac{y}{z}$ et $c = \\frac{z}{x}$, l'inégalité se simplifie grandement.",
-    "Solution": "Posons $a = \\frac{x}{y}$, $b = \\frac{y}{z}$ et $c = \\frac{z}{x}$ pour des réels positifs $x, y, z$. Le premier terme devient : $\\frac{1}{\\frac{x}{y} + \\frac{y}{z} + 1} = \\frac{yz}{xz + y2 + yz} \\le \\frac{z}{x+y+z}$ après majoration ou développement direct selon l'inégalité classique de Cauchy-Schwarz."
-  },
-  {
-    "id": 4,
+    "id": 2,
     "statement": "Soit $A$ et $B$ deux points distincts du plan et $G$ le point tel que $A$ soit le milieu de $[GB]$.\n\n1. Montrer que l'ensemble $(\\mathcal{C})$ des points $N$ du plan tels que $\\frac{NB}{NA}=\\sqrt{2}$ est un cercle de centre $G$ dont on précisera le rayon en fonction de $AB$.\n2. Soit $C$ un point de $(\\mathcal{C})$ et $(\\mathcal{L})$ l'ensemble des points $M$ du plan tels que $2MA^{2}-MB^{2}-MC^{2}=0$.\n   a. Montrer que le point $C$ appartient à $(\\mathcal{L})$.  \n   b. Montrer que pour tout point $M$ de $(\\mathcal{L})$, on a $\\vec{MC}\\cdot\\vec{CG}=0$.  \n   c. Déterminer et construire l'ensemble $(\\mathcal{L})$.",
     "G": "1T",
     "Source": "Concours FHB 2024, phase finale"
