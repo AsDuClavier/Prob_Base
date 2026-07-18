@@ -29,9 +29,7 @@ const CATEGORIES = {
     
     .grid { display: flex; flex-direction: column; gap: 20px; }
     
-    /* --- CARTES CLIQUABLES --- */
     .card { 
-      position: relative; /* Devient le point de repère pour le lien invisible */
       background: white; 
       padding: 20px; 
       border-radius: 8px; 
@@ -40,24 +38,10 @@ const CATEGORIES = {
       transition: transform 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
-    /* Effet visuel au survol pour faire comprendre que c'est cliquable */
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       border-left-color: #2980b9;
-    }
-
-    /* Le lien invisible qui s'étend sur toute la carte */
-    .card-link {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    .card-link::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0; bottom: 0; left: 0;
-      z-index: 1; /* Couvre toute la carte */
     }
 
     .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
@@ -67,13 +51,6 @@ const CATEGORIES = {
     
     .statement { font-size: 16px; line-height: 1.6; margin-bottom: 5px; }
     
-    /* --- EN CARTES INTERACTIVES --- */
-    /* On force les tiroirs et les boutons à être au-dessus du lien invisible (z-index: 2) */
-    .actions, .drawer { 
-      position: relative; 
-      z-index: 2; 
-    }
-
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
     .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
     .btn-toggle:hover { background: #e9ecef; }
@@ -118,27 +95,21 @@ const CATEGORIES = {
 
     <div class="grid" id="problemsGrid">
       {problems.map((prob) => (
-        <div class="card" data-category={prob.G} data-difficulty={prob.D}>
+        <div class="card" data-id={prob.id} data-category={prob.G} data-difficulty={prob.D}>
+          <div class="meta">
+            <span class="badge-cat">{CATEGORIES[prob.G] || 'Autre'}</span>
+            <span class="badge-diff">Niveau {prob.D}</span>
+            {prob.Source && <span class="badge-source">{prob.Source}</span>}
+          </div>
           
-          <!-- Ce bloc englobe les infos cliquables vers la page unique -->
-          <a href={`/problems/${prob.id}`} class="card-link">
-            <div class="meta">
-              <span class="badge-cat">{CATEGORIES[prob.G] || 'Autre'}</span>
-              <span class="badge-diff">Niveau {prob.D}</span>
-              {prob.Source && <span class="badge-source">{prob.Source}</span>}
-            </div>
-            
-            <div class="statement math-target">
-              {prob.statement || "⚠️ Aucun énoncé trouvé"}
-            </div>
-          </a>
+          <div class="statement math-target">
+            {prob.statement || "⚠️ Aucun énoncé trouvé"}
+          </div>
 
-          <!-- Tiroirs masqués (accessibles sans quitter la page grâce au z-index) -->
           {prob["Hint 1"] && <div class="drawer" id={`h1-${prob.id}`}><p><strong>Indice 1 :</strong> <span class="math-target">{prob["Hint 1"]}</span></p></div>}
           {prob["Hint 2"] && <div class="drawer" id={`h2-${prob.id}`}><p><strong>Indice 2 :</strong> <span class="math-target">{prob["Hint 2"]}</span></p></div>}
           {prob.Solution && <div class="drawer drawer-sol" id={`sol-${prob.id}`}><p><strong>Solution :</strong> <span class="math-target">{prob.Solution}</span></p></div>}
 
-          <!-- Barre d'actions -->
           <div class="actions">
             {prob["Hint 1"] && <button class="btn-toggle" data-toggle={`h1-${prob.id}`}>Indice 1</button>}
             {prob["Hint 2"] && <button class="btn-toggle" data-toggle={`h2-${prob.id}`}>Indice 2</button>}
@@ -151,10 +122,19 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      // 1. Gestion des ouvertures de tiroirs
+      // 1. Redirection intelligente au clic sur la carte (sans intercepter les boutons)
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.actions') && !e.target.closest('.drawer')) {
+            const problemId = card.getAttribute('data-id');
+            window.location.href = `/Prob_Base/problems/${problemId}`;
+          }
+        });
+      });
+
+      // 2. Gestion des ouvertures de tiroirs
       document.querySelectorAll('.btn-toggle').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation(); // Sécurité supplémentaire anti-clic simultané
+        btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-toggle');
           const drawer = document.getElementById(targetId);
           if (drawer) {
@@ -164,7 +144,7 @@ const CATEGORIES = {
         });
       });
 
-      // 2. Rendu KaTeX progressif
+      // 3. Rendu KaTeX progressif
       const mathTargets = Array.from(document.querySelectorAll('.math-target'));
       let index = 0;
       const batchSize = 15;
@@ -187,7 +167,7 @@ const CATEGORIES = {
       }
       renderNextBatch();
 
-      // 3. Filtres
+      // 4. Filtres
       const catFilter = document.getElementById('catFilter');
       const diffFilter = document.getElementById('diffFilter');
       const cards = document.querySelectorAll('.card');
