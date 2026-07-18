@@ -1,7 +1,6 @@
 ---
 import problems from '../../data/problems.json';
 
-// Fonction indispensable pour générer les routes statiques dans Astro
 export async function getStaticPaths() {
   return problems.map((prob) => ({
     params: { id: prob.id.toString() },
@@ -34,8 +33,9 @@ const CATEGORIES = {
     body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
-    .back-link { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; font-weight: bold; }
-    .back-link:hover { text-decoration: underline; }
+    /* Bouton retour à l'accueil configuré pour GitHub Pages */
+    .back-btn { display: inline-block; margin-bottom: 25px; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; transition: background 0.2s; }
+    .back-btn:hover { background: #2c3e50; }
     
     h1 { color: #2c3e50; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
     
@@ -44,11 +44,19 @@ const CATEGORIES = {
     .badge-diff { background: #fff2e6; color: #d35400; padding: 6px 12px; border-radius: 4px; }
     .badge-source { background: #eaeaea; color: #666; padding: 6px 12px; border-radius: 4px; }
     
-    .section { margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
+    .section { margin-bottom: 25px; line-height: 1.6; font-size: 16px; }
     .section h2 { font-size: 18px; color: #34495e; margin-bottom: 10px; }
     
-    .box { padding: 15px; background: #f8f9fa; border-left: 4px solid #bdc3c7; border-radius: 4px; }
-    .box-sol { background: #fffaf5; border-left-color: #e67e22; }
+    /* Tiroirs masqués sur la fiche unique */
+    .actions { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: all 0.2s; }
+    .btn-toggle:hover { background: #e9ecef; }
+    .btn-sol { color: #e67e22; border-color: #f39c12; }
+    .btn-sol:hover { background: #fdf6e2; }
+
+    .drawer { display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #bdc3c7; border-radius: 4px; }
+    .drawer-sol { border-left-color: #e67e22; background: #fffaf5; }
+    .drawer.open { display: block; }
     
     .ext-link { display: inline-block; margin-top: 10px; color: #e67e22; font-weight: bold; text-decoration: none; }
     .ext-link:hover { text-decoration: underline; }
@@ -58,7 +66,8 @@ const CATEGORIES = {
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back-link">← Retour au répertoire</a>
+    <!-- Lien vers l'accueil adapté avec le répertoire de base -->
+    <a href="/Prob_Base/" class="back-btn">← Retour à l'accueil</a>
     
     <h1>Problème #{prob.id}</h1>
     
@@ -68,13 +77,13 @@ const CATEGORIES = {
       {prob.Source && <span class="badge-source">{prob.Source}</span>}
     </div>
 
-    <!-- Énoncé -->
+    <!-- Énoncé principal toujours visible -->
     <div class="section">
       <h2>Énoncé</h2>
       <div class="statement-content">{prob.statement}</div>
     </div>
 
-    <!-- Image associée si elle existe -->
+    <!-- Image associée si existante -->
     {prob["Image Link"] && prob["Image Link"] !== "" && (
       <div class="section">
         <h2>Schéma / Figure</h2>
@@ -82,21 +91,20 @@ const CATEGORIES = {
       </div>
     )}
 
-    <!-- Indices -->
-    {(prob["Hint 1"] || prob["Hint 2"]) && (
-      <div class="section">
-        <h2>Indices</h2>
-        {prob["Hint 1"] && <p class="box"><strong>Indice 1 :</strong> {prob["Hint 1"]}</p>}
-        {prob["Hint 2"] && <p class="box"><strong>Indice 2 :</strong> {prob["Hint 2"]}</p>}
-      </div>
-    )}
+    <!-- Zone de contrôle interactive pour les indices et solutions masqués -->
+    <div class="actions">
+      {prob["Hint 1"] && <button class="btn-toggle" data-toggle="h1-indiv">Afficher l'indice 1</button>}
+      {prob["Hint 2"] && <button class="btn-toggle" data-toggle="h2-indiv">Afficher l'indice 2</button>}
+      {prob.Solution && <button class="btn-toggle btn-sol" data-toggle="sol-indiv">Afficher la Solution</button>}
+    </div>
 
-    <!-- Solution rédigée -->
+    <!-- Tiroirs cachés -->
+    {prob["Hint 1"] && <div class="drawer" id="h1-indiv"><p><strong>Indice 1 :</strong> {prob["Hint 1"]}</p></div>}
+    {prob["Hint 2"] && <div class="drawer" id="h2-indiv"><p><strong>Indice 2 :</strong> {prob["Hint 2"]}</p></div>}
     {prob.Solution && (
-      <div class="section">
-        <h2>Solution officielle</h2>
-        <div class="box box-sol">{prob.Solution}</div>
-        
+      <div class="drawer drawer-sol" id="sol-indiv">
+        <p><strong>Solution officielle :</strong></p>
+        <div>{prob.Solution}</div>
         {prob["Solution Link"] && prob["Solution Link"] !== "" && (
           <a href={prob["Solution Link"]} target="_blank" rel="noopener noreferrer" class="ext-link">
             Consulter la solution externe ↗
@@ -107,8 +115,29 @@ const CATEGORIES = {
   </div>
 
   <script is:inline>
-    // Chargement instantané de KaTeX sur toute la page (aucun risque de freeze sur un élément unique)
     window.addEventListener('DOMContentLoaded', () => {
+      // Gestion de l'affichage des éléments cachés de la fiche
+      document.querySelectorAll('.btn-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-toggle');
+          const drawer = document.getElementById(targetId);
+          if (drawer) {
+            drawer.classList.toggle('open');
+            const isOpened = drawer.classList.contains('open');
+            btn.style.background = isOpened ? '#e2e8f0' : '';
+            
+            // Changement dynamique du texte du bouton pour plus de clarté
+            if(btn.classList.contains('btn-sol')) {
+              btn.innerText = isOpened ? "Masquer la Solution" : "Afficher la Solution";
+            } else {
+              const num = targetId.includes('h1') ? '1' : '2';
+              btn.innerText = isOpened ? `Masquer l'indice ${num}` : `Afficher l'indice ${num}`;
+            }
+          }
+        });
+      });
+
+      // Rendu des formules mathématiques de la page
       if (typeof renderMathInElement === 'function') {
         renderMathInElement(document.body, {
           delimiters: [
