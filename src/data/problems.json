@@ -11761,17 +11761,11 @@
   },
   {
     "id": 1843,
-    "Source": "2021 Indonesia MO, P6 of 8",
+    "statement": "There are $n$ natural numbers written on a board. In any move, we can erase $a,b$ and replace it with $\\gcd(a,b)$ and $\\text{lcm}(a,b) - \\gcd(a,b)$. Prove that in finite of moves, all numbers in the board could be made to be equal.",
     "G": "N",
     "D": 3,
-    "T": "",
-    "statement": "There are $n$ natural numbers written on a board. In any move, we can erase $a,b$ and replace it with $\\gcd(a,b)$ and $\\text{lcm}(a,b) - \\gcd(a,b)$. Prove that all numbers on the board are equal after a finite number of moves.",
-    "Hint 1": "Note that using that move repeatedly on \\((a,b)\\), we can change \\((a,b)\\) into \\((gcd(a,b),gcd(a,b))\\).",
-    "Hint 2": "",
-    "Hint 3": "",
-    "Solution": "",
-    "Solution Link": "",
-    "Image Link": ""
+    "Source": "2021 Indonesia MO, P6 of 8",
+    "Hint 1": "Note that using that move repeatedly on \\((a,b)\\), we can change \\((a,b)\\) into \\((gcd(a,b),gcd(a,b))\\)."
   },
   {
     "id": 1842,
@@ -33372,10 +33366,12 @@
   },
   {
     "id": 298,
-    "statement": "For any positive integer $n$, the sequence of positive integers $a_1, a_2, \\dots, a_n, \\dots$ satisfies the following inequality:\n$$\\left ( a_1 + a_2 + \\dots + a_n \\right ) \\left ( \\frac{1}{a_1} + \\frac{1}{a_2} + \\dots + \\frac{1}{a_n} \\right ) \\leq n^2 + 2019.$$\nShow that this is a constant sequence.",
+    "Source": "2019 Korea MO, Intermediate Q4 of 8",
     "G": "N",
     "D": 4,
-    "Source": "2019 Korea MO, Intermediate Q4 of 8"
+    "T": "SE",
+    "statement": "For any positive integer $n$, the sequence of positive integers $a_1, a_2, \\dots, a_n, \\dots$ satisfies the following inequality:\n$$\\left ( a_1 + a_2 + \\dots + a_n \\right ) \\left ( \\frac{1}{a_1} + \\frac{1}{a_2} + \\dots + \\frac{1}{a_n} \\right ) \\leq n^2 + 2019.$$\nShow that this is a constant sequence.",
+    "Hint 3": ""
   },
   {
     "id": 297,
