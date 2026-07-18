@@ -49,27 +49,14 @@ const CATEGORIES = {
     .badge-diff { background: #fff2e6; color: #d35400; padding: 4px 8px; border-radius: 4px; }
     .badge-source { background: #eaeaea; color: #666; padding: 4px 8px; border-radius: 4px; }
     
-    .statement { font-size: 16px; line-height: 1.6; margin-bottom: 5px; }
-    
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
-    .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-    .btn-toggle:hover { background: #e9ecef; }
-    .btn-sol { color: #e67e22; border-color: #f39c12; }
-    .btn-sol:hover { background: #fdf6e2; }
-
-    .drawer { display: none; margin-top: 12px; padding: 12px; background: #f8f9fa; border-left: 3px solid #bdc3c7; border-radius: 4px; font-size: 15px; }
-    .drawer-sol { border-left-color: #e67e22; background: #fffaf5; }
-    .drawer.open { display: block; }
-
-    .statement .katex-display, .drawer .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
+    .statement { font-size: 16px; line-height: 1.6; }
+    .statement .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
     .hidden { display: none !important; }
 
     @media (max-width: 600px) {
       body { padding: 12px; }
       .filters { flex-direction: column; }
       select { width: 100%; }
-      .actions { width: 100%; justify-content: space-between; }
-      .btn-toggle { flex-grow: 1; text-align: center; }
     }
   </style>
 </head>
@@ -105,16 +92,6 @@ const CATEGORIES = {
           <div class="statement math-target">
             {prob.statement || "⚠️ Aucun énoncé trouvé"}
           </div>
-
-          {prob["Hint 1"] && <div class="drawer" id={`h1-${prob.id}`}><p><strong>Indice 1 :</strong> <span class="math-target">{prob["Hint 1"]}</span></p></div>}
-          {prob["Hint 2"] && <div class="drawer" id={`h2-${prob.id}`}><p><strong>Indice 2 :</strong> <span class="math-target">{prob["Hint 2"]}</span></p></div>}
-          {prob.Solution && <div class="drawer drawer-sol" id={`sol-${prob.id}`}><p><strong>Solution :</strong> <span class="math-target">{prob.Solution}</span></p></div>}
-
-          <div class="actions">
-            {prob["Hint 1"] && <button class="btn-toggle" data-toggle={`h1-${prob.id}`}>Indice 1</button>}
-            {prob["Hint 2"] && <button class="btn-toggle" data-toggle={`h2-${prob.id}`}>Indice 2</button>}
-            {prob.Solution && <button class="btn-toggle btn-sol" data-toggle={`sol-${prob.id}`}>Solution</button>}
-          </div>
         </div>
       ))}
     </div>
@@ -122,29 +99,15 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      // 1. Redirection intelligente au clic sur la carte (sans intercepter les boutons)
+      // 1. Redirection au clic sur la carte vers le sous-dossier GitHub Pages
       document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.actions') && !e.target.closest('.drawer')) {
-            const problemId = card.getAttribute('data-id');
-            window.location.href = `/Prob_Base/problems/${problemId}`;
-          }
+        card.addEventListener('click', () => {
+          const problemId = card.getAttribute('data-id');
+          window.location.href = `/Prob_Base/problems/${problemId}`;
         });
       });
 
-      // 2. Gestion des ouvertures de tiroirs
-      document.querySelectorAll('.btn-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const targetId = btn.getAttribute('data-toggle');
-          const drawer = document.getElementById(targetId);
-          if (drawer) {
-            drawer.classList.toggle('open');
-            btn.style.background = drawer.classList.contains('open') ? '#e2e8f0' : '';
-          }
-        });
-      });
-
-      // 3. Rendu KaTeX progressif
+      // 2. Rendu KaTeX progressif (évite les ralentissements CPU)
       const mathTargets = Array.from(document.querySelectorAll('.math-target'));
       let index = 0;
       const batchSize = 15;
@@ -167,7 +130,7 @@ const CATEGORIES = {
       }
       renderNextBatch();
 
-      // 4. Filtres
+      // 3. Système de filtrage interactif
       const catFilter = document.getElementById('catFilter');
       const diffFilter = document.getElementById('diffFilter');
       const cards = document.querySelectorAll('.card');
