@@ -1,0 +1,202 @@
+---
+import problems from '../data/problems.json';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Éditeur de Problèmes</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; text-align: center; }
+    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+    label { font-weight: bold; margin-bottom: 5px; color: #555; }
+    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+    textarea { resize: vertical; min-height: 100px; font-family: monospace; }
+    .btn { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    .btn:hover { background: #219653; }
+    .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+    .status { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .security-banner { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>Modifier un Problème</h1>
+    
+    <div class="security-banner">
+      <strong>Sécurité :</strong> Vos modifications seront envoyées directement à GitHub. Le token reste localisé dans votre navigateur.
+    </div>
+
+    <!-- Configuration de l'accès à GitHub -->
+    <div class="form-group">
+      <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    </div>
+
+    <!-- Choix du problème -->
+    <div class="form-group">
+      <label for="probSelect">Choisir le problème à modifier</label>
+      <select id="probSelect">
+        <option value="">-- Sélectionnez un problème --</option>
+        {problems.map((p) => (
+          <option value={p.id}>[{p.G}] ID {p.id} - {p.Source || "Sans Source"}</option>
+        ))}
+      </select>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;" />
+
+    <!-- Formulaire d'édition (bloqué par défaut tant qu'aucun problème n'est sélectionné) -->
+    <form id="editForm">
+      <div class="form-group">
+        <label for="statement">Énoncé (supporte le LaTeX)</label>
+        <textarea id="statement" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="source">Source</label>
+        <input type="text" id="source" />
+      </div>
+
+      <div class="form-group">
+        <label for="category">Catégorie</label>
+        <select id="category" required>
+          <option value="A">Algèbre (A)</option>
+          <option value="G">Géométrie (G)</option>
+          <option value="N">Théorie des nombres (N)</option>
+          <option value="C">Combinatoire (C)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="difficulty">Difficulté</label>
+        <input type="number" id="difficulty" min="1" max="11" required />
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn" disabled>Enregistrer les modifications</button>
+    </form>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script is:inline define:vars={{ problems }}>
+    // Récupération des éléments du DOM
+    const probSelect = document.getElementById('probSelect');
+    const editForm = document.getElementById('editForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    const GH_OWNER = "AsDuClavier"; 
+    const GH_REPO = "Prob_Base";
+    const FILE_PATH = "src/data/problems.json"; 
+
+    let currentProblem = null;
+
+    // Remplissage automatique du formulaire lorsqu'on sélectionne un problème
+    probSelect.addEventListener('change', (e) => {
+      const id = parseInt(e.target.value);
+      currentProblem = problems.find(p => p.id === id);
+
+      if (currentProblem) {
+        document.getElementById('statement').value = currentProblem.statement || '';
+        document.getElementById('source').value = currentProblem.Source || '';
+        document.getElementById('category').value = currentProblem.G || 'A';
+        document.getElementById('difficulty').value = currentProblem.D || 1;
+        submitBtn.disabled = false;
+      } else {
+        editForm.reset();
+        submitBtn.disabled = true;
+      }
+    });
+
+    // Gestion de la soumission du formulaire et interaction avec l'API GitHub
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const token = document.getElementById('ghToken').value.trim();
+      if (!token) {
+        showStatus("Veuillez saisir votre token GitHub pour valider les modifications.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatus("Synchronisation avec GitHub en cours...", "");
+
+      try {
+        // 1. Demander à GitHub le SHA actuel du fichier JSON (requis pour pouvoir écraser un fichier)
+        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
+        const getRes = await fetch(url, {
+          headers: { "Authorization": `token ${token}` }
+        });
+
+        if (!getRes.ok) throw new Error("Impossible de récupérer les métadonnées du fichier sur GitHub. Vérifiez votre token ou vos droits.");
+        
+        const fileData = await getRes.json();
+        const currentSha = fileData.sha;
+
+        // 2. Mettre à jour localement le tableau de données avec les modifications du formulaire
+        const updatedProblems = problems.map(p => {
+          if (p.id === currentProblem.id) {
+            return {
+              ...p,
+              statement: document.getElementById('statement').value,
+              Source: document.getElementById('source').value,
+              G: document.getElementById('category').value,
+              D: parseInt(document.getElementById('difficulty').value)
+            };
+          }
+          return p;
+        });
+
+        // 3. Convertir le tableau mis à jour en texte JSON propre et l'encoder en Base64 (exigé par GitHub)
+        const jsonString = JSON.stringify(updatedProblems, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+        // 4. Envoyer le fichier mis à jour vers l'API GitHub via une requête PUT
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            "Authorization": `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: `Mise à jour du problème ID ${currentProblem.id} via l'interface Admin`,
+            content: base64Content,
+            sha: currentSha
+          })
+        });
+
+        if (putRes.ok) {
+          showStatus(`Succès ! Le problème ${currentProblem.id} a été modifié sur GitHub. Le site va se mettre à jour dans 2-3 minutes.`, "success");
+          // On met à jour la variable globale locale au cas où l'admin fait une autre édition à la suite
+          currentProblem.statement = document.getElementById('statement').value;
+          currentProblem.Source = document.getElementById('source').value;
+          currentProblem.G = document.getElementById('category').value;
+          currentProblem.D = parseInt(document.getElementById('difficulty').value);
+        } else {
+          const errorData = await putRes.json();
+          throw new Error(errorData.message || "Erreur lors de la sauvegarde sur GitHub.");
+        }
+
+      } catch (err) {
+        showStatus("Erreur : " + err.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    function showStatus(msg, type) {
+      statusMessage.innerText = msg;
+      statusMessage.className = "status";
+      if (type) statusMessage.classList.add(type);
+      statusMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
