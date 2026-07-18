@@ -2,10 +2,12 @@
 import problems from '../../data/problems.json';
 
 export async function getStaticPaths() {
-  return problems.map((prob) => ({
-    params: { id: prob.id.toString() },
-    props: { prob },
-  }));
+  return problems
+    .filter(prob => prob && prob.id !== undefined)
+    .map((prob) => ({
+      params: { id: String(prob.id) },
+      props: { prob },
+    }));
 }
 
 const { prob } = Astro.props;
@@ -30,16 +32,17 @@ const CATEGORIES = {
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     
-    /* Bouton retour à l'accueil configuré pour GitHub Pages */
     .back-btn { display: inline-block; margin-bottom: 25px; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; transition: background 0.2s; }
     .back-btn:hover { background: #2c3e50; }
     
-    h1 { color: #2c3e50; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    h1 { color: #2c3e50; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 2rem; }
     
-    .meta { display: flex; gap: 10px; margin-bottom: 25px; font-size: 14px; font-weight: bold; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; font-size: 14px; font-weight: bold; }
     .badge-cat { background: #e8f4fd; color: #2980b9; padding: 6px 12px; border-radius: 4px; }
     .badge-diff { background: #fff2e6; color: #d35400; padding: 6px 12px; border-radius: 4px; }
     .badge-source { background: #eaeaea; color: #666; padding: 6px 12px; border-radius: 4px; }
@@ -47,27 +50,50 @@ const CATEGORIES = {
     .section { margin-bottom: 25px; line-height: 1.6; font-size: 16px; }
     .section h2 { font-size: 18px; color: #34495e; margin-bottom: 10px; }
     
-    /* Tiroirs masqués sur la fiche unique */
-    .actions { display: flex; gap: 10px; margin-bottom: 20px; }
+    .statement-content { word-break: break-word; }
+    .problem-img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 15px auto 0 auto; }
+
+    .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: all 0.2s; }
     .btn-toggle:hover { background: #e9ecef; }
     .btn-sol { color: #e67e22; border-color: #f39c12; }
     .btn-sol:hover { background: #fdf6e2; }
 
-    .drawer { display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #bdc3c7; border-radius: 4px; }
+    .drawer { display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #bdc3c7; border-radius: 4px; word-break: break-word; }
     .drawer-sol { border-left-color: #e67e22; background: #fffaf5; }
     .drawer.open { display: block; }
     
     .ext-link { display: inline-block; margin-top: 10px; color: #e67e22; font-weight: bold; text-decoration: none; }
     .ext-link:hover { text-decoration: underline; }
     
-    .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
+    /* Protection globale contre les débordements KaTeX */
+    .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; width: 100%; }
+    .katex { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+    /* --- OPTIMISATIONS RESPONSIVES MOBILES --- */
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .container { padding: 20px 15px; border-radius: 6px; }
+      
+      h1 { font-size: 1.6rem; margin-bottom: 12px; }
+      .meta { gap: 6px; margin-bottom: 20px; }
+      .badge-cat, .badge-diff, .badge-source { padding: 4px 8px; font-size: 12px; }
+      
+      .section { font-size: 15px; margin-bottom: 20px; }
+      .section h2 { font-size: 16px; }
+      
+      /* Boutons empilés et larges pour un confort tactile optimal */
+      .actions { flex-direction: column; gap: 8px; }
+      .btn-toggle { width: 100%; text-align: center; padding: 12px; font-size: 15px; }
+      
+      .drawer { padding: 12px; margin-bottom: 15px; }
+      .back-btn { width: 100%; text-align: center; margin-bottom: 20px; padding: 10px; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Lien vers l'accueil adapté avec le répertoire de base -->
-    <a href="/Prob_Base/general" class="back-btn">← Retour à l'accueil</a>
+    <a href="/Prob_Base/general" class="back-btn">← Retour à la liste</a>
     
     <h1>Problème #{prob.id}</h1>
     
@@ -77,28 +103,24 @@ const CATEGORIES = {
       {prob.Source && <span class="badge-source">{prob.Source}</span>}
     </div>
 
-    <!-- Énoncé principal toujours visible -->
     <div class="section">
       <h2>Énoncé</h2>
       <div class="statement-content">{prob.statement}</div>
     </div>
 
-    <!-- Image associée si existante -->
     {prob["Image Link"] && prob["Image Link"] !== "" && (
       <div class="section">
         <h2>Schéma / Figure</h2>
-        <img src={prob["Image Link"]} alt={`Schéma problème ${prob.id}`} style="max-width:100%; height:auto; border-radius:4px;" />
+        <img src={prob["Image Link"]} alt={`Schéma problème ${prob.id}`} class="problem-img" />
       </div>
     )}
 
-    <!-- Zone de contrôle interactive pour les indices et solutions masqués -->
     <div class="actions">
       {prob["Hint 1"] && <button class="btn-toggle" data-toggle="h1-indiv">Afficher l'indice 1</button>}
       {prob["Hint 2"] && <button class="btn-toggle" data-toggle="h2-indiv">Afficher l'indice 2</button>}
       {prob.Solution && <button class="btn-toggle btn-sol" data-toggle="sol-indiv">Afficher la Solution</button>}
     </div>
 
-    <!-- Tiroirs cachés -->
     {prob["Hint 1"] && <div class="drawer" id="h1-indiv"><p><strong>Indice 1 :</strong> {prob["Hint 1"]}</p></div>}
     {prob["Hint 2"] && <div class="drawer" id="h2-indiv"><p><strong>Indice 2 :</strong> {prob["Hint 2"]}</p></div>}
     {prob.Solution && (
@@ -116,7 +138,6 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      // Gestion de l'affichage des éléments cachés de la fiche
       document.querySelectorAll('.btn-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetId = btn.getAttribute('data-toggle');
@@ -126,7 +147,6 @@ const CATEGORIES = {
             const isOpened = drawer.classList.contains('open');
             btn.style.background = isOpened ? '#e2e8f0' : '';
             
-            // Changement dynamique du texte du bouton pour plus de clarté
             if(btn.classList.contains('btn-sol')) {
               btn.innerText = isOpened ? "Masquer la Solution" : "Afficher la Solution";
             } else {
@@ -137,7 +157,6 @@ const CATEGORIES = {
         });
       });
 
-      // Rendu des formules mathématiques de la page
       if (typeof renderMathInElement === 'function') {
         renderMathInElement(document.body, {
           delimiters: [
