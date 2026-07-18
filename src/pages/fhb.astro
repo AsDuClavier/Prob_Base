@@ -1,5 +1,5 @@
 ---
-import problems from '../data/pfhb.json';
+import probfhb from '../data/pfhb.json';
 
 // Correspondance exacte avec les valeurs d'options du formulaire d'administration
 const NIVEAU = {
@@ -153,7 +153,7 @@ const NIVEAU = {
     </div>
 
     <div class="grid" id="problemsGrid">
-      {problems.map((prob) => (
+      {probfhb.map((prob) => (
         <div class="card" data-id={prob.id} data-category={prob.G}>
           <div class="meta">
             <!-- Utilisation du dictionnaire NIVEAU pour afficher le texte propre au lieu du code brut -->
