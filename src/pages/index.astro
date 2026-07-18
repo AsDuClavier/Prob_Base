@@ -148,6 +148,14 @@
       color: #4a5568;
       transform: scale(1.02);
     }
+    .admin-p {
+      font-size: 17px;
+      color: #a0aec1;
+      text-decoration: none;
+      transition: color 0.2s, transform 0.2s;
+      font-weight: 600;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -175,13 +183,11 @@
 
     <!-- Conteneur d'administration masqué -->
     <div id="adminContainer" class="admin-links-container">
-      <p>Problèmes généraux</p>
+      <p class="admin-p">Problèmes généraux</p>
       <a href="/Prob_Base/admin-add" class="admin-link">⚙️ Ajout -Problèmes généraux</a>
       <a href="/Prob_Base/admin" class="admin-link">⚙️ Edit -Problèmes généraux</a>
-    </div>
-    
-    <div id="adminContainer" class="admin-links-container">
-      <p>Problèmes FHB</p>
+
+      <p class="admin-p">Problèmes FHB</p>
       <a href="/Prob_Base/adminfhb-add" class="admin-link">⚙️ Ajout -Problèmes FHB</a>
       <a href="/Prob_Base/adminfhb-edit" class="admin-link">⚙️ Edit -Problèmes FHB</a>
     </div>
