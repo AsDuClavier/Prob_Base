@@ -1,7 +1,6 @@
 ---
 import problems from '../data/problems.json';
 
-// Dictionnaires de correspondance pour afficher les labels propres
 const CATEGORIES = {
   'A': 'Algèbre',
   'G': 'Géométrie',
@@ -17,118 +16,83 @@ const CATEGORIES = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prob Base - Olympiades</title>
   
-  <!-- 1. Chargement de la feuille de style KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  
-  <!-- 2. Chargement des scripts de rendu -->
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f9;
-      color: #333;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    h1 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2rem;
-    }
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 25px;
-      justify-content: center;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    select {
-      padding: 10px 12px; /* Légèrement agrandi pour faciliter le clic tactile */
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      background: white;
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+    h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+    .filters { display: flex; gap: 15px; margin-bottom: 25px; justify-content: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    select { padding: 10px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; background: white; cursor: pointer; }
+    
+    .grid { display: flex; flex-direction: column; gap: 20px; }
+    
+    /* --- CARTES CLIQUABLES --- */
+    .card { 
+      position: relative; /* Devient le point de repère pour le lien invisible */
+      background: white; 
+      padding: 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+      border-left: 5px solid #3498db; 
+      transition: transform 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
-    .grid {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* Effet visuel au survol pour faire comprendre que c'est cliquable */
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-left-color: #2980b9;
     }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      border-left: 5px solid #3498db;
+
+    /* Le lien invisible qui s'étend sur toute la carte */
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
     }
-    .meta {
-      display: flex;
-      flex-wrap: wrap; /* Permet aux badges de passer à la ligne sur les petits écrans */
-      gap: 8px;
-      margin-bottom: 15px;
-      font-size: 14px;
-      font-weight: bold;
+    .card-link::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      z-index: 1; /* Couvre toute la carte */
     }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
     .badge-cat { background: #e8f4fd; color: #2980b9; padding: 4px 8px; border-radius: 4px; }
     .badge-diff { background: #fff2e6; color: #d35400; padding: 4px 8px; border-radius: 4px; }
     .badge-source { background: #eaeaea; color: #666; padding: 4px 8px; border-radius: 4px; }
     
-    .statement {
-      font-size: 16px;
-      line-height: 1.6;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+    .statement { font-size: 16px; line-height: 1.6; margin-bottom: 5px; }
+    
+    /* --- EN CARTES INTERACTIVES --- */
+    /* On force les tiroirs et les boutons à être au-dessus du lien invisible (z-index: 2) */
+    .actions, .drawer { 
+      position: relative; 
+      z-index: 2; 
     }
 
-    /* Empêche les équations KaTeX en bloc ($$ ... $$) de déformer la page sur mobile */
-    .statement .katex-display {
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 8px 0;
-      margin: 0.5em 0;
-    }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
+    .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-toggle:hover { background: #e9ecef; }
+    .btn-sol { color: #e67e22; border-color: #f39c12; }
+    .btn-sol:hover { background: #fdf6e2; }
 
-    .hidden {
-      display: none !important;
-    }
+    .drawer { display: none; margin-top: 12px; padding: 12px; background: #f8f9fa; border-left: 3px solid #bdc3c7; border-radius: 4px; font-size: 15px; }
+    .drawer-sol { border-left-color: #e67e22; background: #fffaf5; }
+    .drawer.open { display: block; }
 
-    /* --- REGLAGES RESPONSIVE POUR TELEPHONES --- */
+    .statement .katex-display, .drawer .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
+    .hidden { display: none !important; }
+
     @media (max-width: 600px) {
-      body {
-        padding: 12px; /* Moins d'espace perdu sur les bords extérieurs */
-      }
-      h1 {
-        font-size: 1.5rem; /* Titre plus adapté aux petits écrans */
-        margin-bottom: 20px;
-      }
-      .filters {
-        flex-direction: column; /* On empile les filtres verticalement */
-        gap: 10px;
-        padding: 12px;
-      }
-      select {
-        width: 100%; /* Les menus déroulants prennent toute la largeur disponible */
-        font-size: 15px;
-      }
-      .card {
-        padding: 15px; /* Optimisation de l'espace à l'intérieur des cartes */
-      }
-      .statement {
-        font-size: 15px; /* Amélioration du confort de lecture sur petit écran */
-      }
+      body { padding: 12px; }
+      .filters { flex-direction: column; }
+      select { width: 100%; }
+      .actions { width: 100%; justify-content: space-between; }
+      .btn-toggle { flex-grow: 1; text-align: center; }
     }
   </style>
 </head>
@@ -136,7 +100,6 @@ const CATEGORIES = {
   <div class="container">
     <h1>Répertoire de Problèmes de Mathématiques</h1>
     
-    <!-- Filtres -->
     <div class="filters">
       <select id="catFilter">
         <option value="">Toutes les catégories</option>
@@ -145,7 +108,6 @@ const CATEGORIES = {
         <option value="N">Théorie des nombres</option>
         <option value="C">Combinatoire</option>
       </select>
-
       <select id="diffFilter">
         <option value="">Toutes les difficultés</option>
         {[...Array(11)].map((_, i) => (
@@ -154,18 +116,33 @@ const CATEGORIES = {
       </select>
     </div>
 
-    <!-- Grille des cartes -->
     <div class="grid" id="problemsGrid">
       {problems.map((prob) => (
         <div class="card" data-category={prob.G} data-difficulty={prob.D}>
-          <div class="meta">
-            <span class="badge-cat">{CATEGORIES[prob.G] || 'Autre'}</span>
-            <span class="badge-diff">Niveau {prob.D}</span>
-            {prob.Source && <span class="badge-source">{prob.Source}</span>}
-          </div>
           
-          <div class="statement">
-            {prob.statement || "⚠️ Aucun énoncé trouvé dans le JSON"}
+          <!-- Ce bloc englobe les infos cliquables vers la page unique -->
+          <a href={`/problems/${prob.id}`} class="card-link">
+            <div class="meta">
+              <span class="badge-cat">{CATEGORIES[prob.G] || 'Autre'}</span>
+              <span class="badge-diff">Niveau {prob.D}</span>
+              {prob.Source && <span class="badge-source">{prob.Source}</span>}
+            </div>
+            
+            <div class="statement math-target">
+              {prob.statement || "⚠️ Aucun énoncé trouvé"}
+            </div>
+          </a>
+
+          <!-- Tiroirs masqués (accessibles sans quitter la page grâce au z-index) -->
+          {prob["Hint 1"] && <div class="drawer" id={`h1-${prob.id}`}><p><strong>Indice 1 :</strong> <span class="math-target">{prob["Hint 1"]}</span></p></div>}
+          {prob["Hint 2"] && <div class="drawer" id={`h2-${prob.id}`}><p><strong>Indice 2 :</strong> <span class="math-target">{prob["Hint 2"]}</span></p></div>}
+          {prob.Solution && <div class="drawer drawer-sol" id={`sol-${prob.id}`}><p><strong>Solution :</strong> <span class="math-target">{prob.Solution}</span></p></div>}
+
+          <!-- Barre d'actions -->
+          <div class="actions">
+            {prob["Hint 1"] && <button class="btn-toggle" data-toggle={`h1-${prob.id}`}>Indice 1</button>}
+            {prob["Hint 2"] && <button class="btn-toggle" data-toggle={`h2-${prob.id}`}>Indice 2</button>}
+            {prob.Solution && <button class="btn-toggle btn-sol" data-toggle={`sol-${prob.id}`}>Solution</button>}
           </div>
         </div>
       ))}
@@ -174,21 +151,29 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      const catFilter = document.getElementById('catFilter');
-      const diffFilter = document.getElementById('diffFilter');
-      const cards = Array.from(document.querySelectorAll('.card'));
-      const statements = Array.from(document.querySelectorAll('.statement'));
+      // 1. Gestion des ouvertures de tiroirs
+      document.querySelectorAll('.btn-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Sécurité supplémentaire anti-clic simultané
+          const targetId = btn.getAttribute('data-toggle');
+          const drawer = document.getElementById(targetId);
+          if (drawer) {
+            drawer.classList.toggle('open');
+            btn.style.background = drawer.classList.contains('open') ? '#e2e8f0' : '';
+          }
+        });
+      });
 
-      // 1. Rendu KaTeX progressif par paquets (évite le freeze CPU)
+      // 2. Rendu KaTeX progressif
+      const mathTargets = Array.from(document.querySelectorAll('.math-target'));
       let index = 0;
       const batchSize = 15;
 
       function renderNextBatch() {
         if (typeof renderMathInElement !== 'function') return;
-
-        const end = Math.min(index + batchSize, statements.length);
+        const end = Math.min(index + batchSize, mathTargets.length);
         for (; index < end; index++) {
-          renderMathInElement(statements[index], {
+          renderMathInElement(mathTargets[index], {
             delimiters: [
               {left: '$$', right: '$$', display: true},
               {left: '$', right: '$', display: false},
@@ -198,34 +183,25 @@ const CATEGORIES = {
             throwOnError: false
           });
         }
-
-        if (index < statements.length) {
-          setTimeout(renderNextBatch, 16);
-        }
+        if (index < mathTargets.length) setTimeout(renderNextBatch, 16);
       }
-
       renderNextBatch();
 
-      // 2. Filtrage interactif
+      // 3. Filtres
+      const catFilter = document.getElementById('catFilter');
+      const diffFilter = document.getElementById('diffFilter');
+      const cards = document.querySelectorAll('.card');
+
       function filterProblems() {
-        const selectedCat = catFilter.value;
-        const selectedDiff = diffFilter.value;
-
         cards.forEach(card => {
-          const matchesCat = !selectedCat || card.dataset.category === selectedCat;
-          const matchesDiff = !selectedDiff || card.dataset.difficulty === selectedDiff;
-
-          if (matchesCat && matchesDiff) {
-            card.classList.remove('hidden');
-          } else {
-            card.classList.add('hidden');
-          }
+          const mCat = !catFilter.value || card.dataset.category === catFilter.value;
+          const mDiff = !diffFilter.value || card.dataset.difficulty === diffFilter.value;
+          card.classList.toggle('hidden', !(mCat && mDiff));
         });
       }
-
       catFilter.addEventListener('change', filterProblems);
       diffFilter.addEventListener('change', filterProblems);
     });
   </script>
 </body>
-</html> 
+</html>
