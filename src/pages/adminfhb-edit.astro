@@ -1,0 +1,334 @@
+---
+import problems from '../data/pfhb.json';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Éditeur de Problèmes</title>
+  <style>
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    
+    .nav-links { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .back-btn { display: inline-block; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    .back-btn:hover { background: #2c3e50; }
+
+    h1 { color: #2c3e50; text-align: center; margin-top: 10px; }
+    .form-group { margin-bottom: 18px; display: flex; flex-direction: column; position: relative; }
+    .form-row { display: flex; gap: 15px; }
+    .form-row .form-group { flex: 1; }
+    
+    label { font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+    textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+    
+    .btn { background: #27ae60; color: white; padding: 14px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-top: 10px; }
+    .btn:hover { background: #219653; }
+    .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+    
+    .status { margin-top: 15px; padding: 12px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .security-banner { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+    
+    /* Styles pour la barre de recherche et ses résultats */
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .search-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-item:hover {
+      background: #f0f2f5;
+      color: #2980b9;
+    }
+    .search-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="nav-links">
+      <a href="/Prob_Base/" class="back-btn">← Accueil</a>
+    </div>
+
+    <h1>Modifier un problème existant</h1>
+    
+    <div class="security-banner">
+      <strong>Sécurité :</strong> Vos modifications seront envoyées directement à GitHub. Le token reste localisé dans votre navigateur.
+    </div>
+
+    <!-- Configuration de l'accès à GitHub -->
+    <div class="form-group">
+      <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" required />
+    </div>
+
+    <!-- Barre de recherche dynamique -->
+    <div class="form-group">
+      <label for="probSearch">Rechercher le problème à modifier</label>
+      <input type="text" id="probSearch" placeholder="Tapez un ID, une source ou un mot-clé..." autocomplete="off" />
+      <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;" />
+
+    <!-- Formulaire d'édition -->
+    <form id="editForm">
+      <div class="form-group">
+        <label for="statement">Énoncé du problème (LaTeX $ et $$ supportés)</label>
+        <textarea id="statement" required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Niveau</label>
+          <select id="category" required>
+            <option value="65">6e/5e</option>
+            <option value="43">4e/3e</option>
+            <option value="2">2nde</option>
+            <option value="1T">1ère/Tle</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="source">Source (Optionnel)</label>
+          <input type="text" id="source" placeholder="ex: IMO 2026, Shortlist" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="hint1">Indice 1 (Optionnel)</label>
+        <textarea id="hint1" placeholder="Penser à utiliser le principe des tiroirs..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="hint2">Indice 2 (Optionnel)</label>
+        <textarea id="hint2" placeholder="Regarder modulo 4..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="solution">Solution rédigée (Optionnel)</label>
+        <textarea id="solution" placeholder="Par le théorème de..."></textarea>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn" disabled>Enregistrer les modifications</button>
+    </form>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script is:inline define:vars={{ problems }}>
+    var probSearch = document.getElementById('probSearch');
+    var searchResults = document.getElementById('searchResults');
+    var editForm = document.getElementById('editForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var statusMessage = document.getElementById('statusMessage');
+
+    // CONFIGURATION DE VOTRE REPO
+    var GH_OWNER = "asduclavier"; 
+    var GH_REPO = "Prob_Base";
+    var FILE_PATH = "src/data/pfhb.json";
+
+    var currentProblem = null;
+
+    // Logique de recherche dynamique
+    probSearch.addEventListener('input', function(e) {
+      var query = e.target.value.toLowerCase().trim();
+      searchResults.innerHTML = '';
+
+      if (!query) {
+        searchResults.style.display = 'none';
+        return;
+      }
+
+      // Filtrer les problèmes par ID, Source ou Énoncé
+      var matches = problems.filter(function(p) {
+        var idMatch = p.id && p.id.toString() === query;
+        var sourceMatch = p.Source && p.Source.toLowerCase().includes(query);
+        var statementMatch = p.statement && p.statement.toLowerCase().includes(query);
+        return idMatch || sourceMatch || statementMatch;
+      }).slice(0, 10);
+
+      if (matches.length > 0) {
+        matches.forEach(function(p) {
+          var div = document.createElement('div');
+          div.className = 'search-item';
+          div.innerHTML = '<strong>[' + (p.G || '?') + '] ID ' + p.id + '</strong> - ' + (p.Source || 'Sans source') + ' — <span>' + (p.statement || '') + '</span>';
+          
+          div.addEventListener('click', function() {
+            selectProblem(p);
+          });
+          searchResults.appendChild(div);
+        });
+        searchResults.style.display = 'block';
+      } else {
+        var div = document.createElement('div');
+        div.className = 'search-item';
+        div.style.color = '#888';
+        div.innerText = 'Aucun problème trouvé';
+        searchResults.appendChild(div);
+        searchResults.style.display = 'block';
+      }
+    });
+
+    // Fermer les résultats si on clique en dehors
+    document.addEventListener('click', function(e) {
+      if (e.target !== probSearch && e.target !== searchResults) {
+        searchResults.style.display = 'none';
+      }
+    });
+
+    // Fonction pour charger le problème sélectionné dans le formulaire
+    function selectProblem(problem) {
+      currentProblem = problem;
+      probSearch.value = '[' + (problem.G || '?') + '] ID ' + problem.id + ' - ' + (problem.Source || 'Sans source');
+      searchResults.style.display = 'none';
+
+      document.getElementById('statement').value = problem.statement || '';
+      document.getElementById('category').value = problem.G || '65';
+      document.getElementById('source').value = problem.Source || '';
+      document.getElementById('hint1').value = problem["Hint 1"] || '';
+      document.getElementById('hint2').value = problem["Hint 2"] || '';
+      document.getElementById('solution').value = problem["Solution"] || '';
+      
+      submitBtn.disabled = false;
+    }
+
+    // Gestion de la soumission vers l'API GitHub
+    editForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      var token = document.getElementById('ghToken').value.trim();
+      if (!token) {
+        showStatus("Veuillez saisir votre token GitHub pour valider les modifications.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatus("Connexion à GitHub et récupération du fichier de données...", "");
+
+      var url = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + FILE_PATH;
+
+      fetch(url, {
+        headers: { "Authorization": "token " + token }
+      })
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error("Impossible de joindre GitHub. Vérifiez votre token ou vos droits sur le dépôt.");
+        }
+        return res.json();
+      })
+      .then(function(fileData) {
+        var currentSha = fileData.sha;
+        
+        // Décodage propre et sécurisé du fichier distant UTF-8 base64
+        var currentContentText = decodeURIComponent(atob(fileData.content).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        var remoteProblems = JSON.parse(currentContentText);
+
+        // Récupération des valeurs du formulaire
+        var sourceVal = document.getElementById('source').value.trim();
+        var h1Val = document.getElementById('hint1').value.trim();
+        var h2Val = document.getElementById('hint2').value.trim();
+        var solVal = document.getElementById('solution').value.trim();
+
+        // Mettre à jour la liste complète des problèmes
+        var updatedProblems = remoteProblems.map(function(p) {
+          if (parseInt(p.id) === parseInt(currentProblem.id)) {
+            var updated = {
+              id: p.id,
+              statement: document.getElementById('statement').value,
+              G: document.getElementById('category').value
+            };
+
+            if (sourceVal) updated["Source"] = sourceVal;
+            if (h1Val) updated["Hint 1"] = h1Val;
+            if (h2Val) updated["Hint 2"] = h2Val;
+            if (solVal) updated["Solution"] = solVal;
+
+            return updated;
+          }
+          return p;
+        });
+
+        var updatedJsonString = JSON.stringify(updatedProblems, null, 2);
+        var base64Content = btoa(unescape(encodeURIComponent(updatedJsonString)));
+
+        showStatus("Envoi des modifications du problème #" + currentProblem.id + " vers GitHub...", "");
+
+        return fetch(url, {
+          method: 'PUT',
+          headers: {
+            "Authorization": "token " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: "Mise à jour du problème ID " + currentProblem.id + " via l'interface Admin",
+            content: base64Content,
+            sha: currentSha
+          })
+        });
+      })
+      .then(function(putRes) {
+        if (putRes.ok) {
+          showStatus("Succès ! Le problème " + currentProblem.id + " a été modifié sur GitHub. Le site se mettra à jour d'ici 2 minutes.", "success");
+          
+          // Mettre à jour l'état local au cas où l'utilisateur veut remodifier sans recharger la page
+          currentProblem.statement = document.getElementById('statement').value;
+          currentProblem.G = document.getElementById('category').value;
+          currentProblem["Source"] = document.getElementById('source').value.trim();
+          currentProblem["Hint 1"] = document.getElementById('hint1').value.trim();
+          currentProblem["Hint 2"] = document.getElementById('hint2').value.trim();
+          currentProblem["Solution"] = document.getElementById('solution').value.trim();
+        } else {
+          return putRes.json().then(function(errData) {
+            throw new Error(errData.message || "Erreur lors de la sauvegarde.");
+          });
+        }
+      })
+      .catch(function(err) {
+        showStatus("Erreur : " + err.message, "error");
+      })
+      .finally(function() {
+        submitBtn.disabled = false;
+      });
+    });
+
+    function showStatus(msg, type) {
+      statusMessage.innerText = msg;
+      statusMessage.className = "status " + (type || "");
+      statusMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
