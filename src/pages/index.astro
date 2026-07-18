@@ -1,5 +1,5 @@
 ---
-// Nouvelle page d'accueil / Portail d'aiguillage
+// Page d'accueil avec accès administration sécurisé par code secret
 ---
 
 <!DOCTYPE html>
@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prob Base - Accueil</title>
+  <title>Répertoire de problèmes</title>
   <style>
     html { 
       scrollbar-gutter: stable; 
@@ -16,9 +16,9 @@
       box-sizing: border-box; 
     }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f6f9;
-      color: #333;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: #f0f4f8;
+      color: #2d3748;
       margin: 0;
       padding: 0;
       display: flex;
@@ -37,11 +37,23 @@
       width: 100%;
     }
     h1 {
-      color: #2c3e50;
-      font-size: 2.5rem;
+      background: linear-gradient(135deg, #1e3c72, #3498db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.8rem;
       text-align: center;
-      margin-bottom: 50px;
-      font-weight: 700;
+      margin-bottom: 15px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .description {
+      font-size: 1.15rem;
+      color: #4a5568;
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.6;
+      margin-top: 0;
+      margin-bottom: 45px;
     }
     .portal-grid {
       display: flex;
@@ -62,67 +74,95 @@
       align-items: center;
       text-align: center;
       text-decoration: none;
-      background: white;
-      color: #2c3e50;
       padding: 35px 25px;
-      font-size: 1.25rem;
-      font-weight: bold;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      border-top: 5px solid #3498db;
-      transition: transform 0.2s, box-shadow 0.2s, border-top-color 0.2s, color 0.2s;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border-radius: 12px;
       min-height: 150px;
-    }
-    .portal-btn:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      border-top-color: #2980b9;
-      color: #2980b9;
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
     }
     
-    /* Style pour le bouton en attente (Concours FHB) */
+    .portal-btn.active {
+      background: linear-gradient(135deg, #3498db, #5f27cd);
+      color: white;
+      box-shadow: 0 10px 20px rgba(95, 39, 205, 0.2);
+    }
+    .portal-btn.active:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 15px 28px rgba(95, 39, 205, 0.35);
+    }
+    
     .portal-btn.disabled {
-      border-top-color: #bdc3c7;
-      color: #95a5a6;
-      background: #f8f9fa;
+      background: #e2e8f0;
+      color: #a0aec0;
+      border: 2px dashed #cbd5e0;
       cursor: not-allowed;
-      box-shadow: none;
     }
     .portal-btn.disabled:hover {
       transform: none;
-      box-shadow: none;
-      color: #95a5a6;
-      border-top-color: #bdc3c7;
     }
 
+    /* Styles du Footer et du système de déverrouillage */
     footer {
-      padding: 25px;
-      text-align: center;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
       width: 100%;
+    }
+    .secret-input {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      text-align: center;
+      width: 120px;
+      background: transparent;
+      color: #718096;
+      transition: all 0.2s ease;
+    }
+    .secret-input:focus {
+      border-color: #a0aec0;
+      width: 140px;
+    }
+    .admin-links-container {
+      display: none; /* Masqué par défaut */
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .admin-links-container.visible {
+      display: flex; /* Affiché uniquement lorsque la classe est ajoutée */
     }
     .admin-link {
       font-size: 13px;
-      color: #bdc3c7;
+      color: #a0aec0;
       text-decoration: none;
-      transition: color 0.2s;
-      font-weight: 500;
+      transition: color 0.2s, transform 0.2s;
+      font-weight: 600;
+      display: inline-block;
     }
     .admin-link:hover {
-      color: #7f8c8d;
+      color: #4a5568;
+      transform: scale(1.02);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Prob Base</h1>
+    <h1>Répertoire de problèmes</h1>
+    
+    <p class="description">
+      Bienvenue sur votre plateforme dédiée à l'entraînement et à la résolution de problèmes mathématiques rigoureux. Sélectionnez une section ci-dessous pour accéder aux énoncés, indices et solutions rédigées.
+    </p>
     
     <div class="portal-grid">
-      <!-- Lien vers la page contenant l'ancienne liste des problèmes -->
-      <a href="/Prob_Base/general" class="portal-btn">
+      <a href="/Prob_Base/general" class="portal-btn active">
         Problèmes généraux
       </a>
       
-      <!-- Bouton inactif temporairement -->
       <a href="#" class="portal-btn disabled" onclick="return false;">
         Problème type Concours FHB
       </a>
@@ -130,8 +170,31 @@
   </div>
 
   <footer>
-    <!-- Bouton discret d'administration tout en bas -->
-    <a href="/Prob_Base/admin-add" class="admin-link">⚙️ Menu Gestion Administration</a>
+    <!-- Petit champ discret simulé en type password pour masquer la saisie -->
+    <input type="password" id="secretGate" class="secret-input" placeholder="Clé d'accès..." />
+
+    <!-- Conteneur d'administration masqué -->
+    <div id="adminContainer" class="admin-links-container">
+      <a href="/Prob_Base/admin-add" class="admin-link">⚙️ Menu Gestion Administration - 1</a>
+      <a href="/Prob_Base/admin" class="admin-link">⚙️ Menu Gestion Administration - 2</a>
+    </div>
   </footer>
+
+  <script is:inline>
+    window.addEventListener('DOMContentLoaded', () => {
+      const secretGate = document.getElementById('secretGate');
+      const adminContainer = document.getElementById('adminContainer');
+      
+      // CONFIGURATION : Changez "admin" par le mot secret de votre choix
+      const SECRET_KEY = "admin"; 
+
+      secretGate.addEventListener('input', () => {
+        if (secretGate.value.trim() === SECRET_KEY) {
+          adminContainer.classList.add('visible'); // Affiche les liens
+          secretGate.style.display = 'none';      // Masque définitivement le champ de saisie
+        }
+      });
+    });
+  </script>
 </body>
 </html>
