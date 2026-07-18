@@ -19,8 +19,33 @@ const CATEGORIES = {
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-
   <style>
+    /* 1. ANCRE LE LAYOUT POUR ÉVITER LE SAUT DE LA BARRE DE DÉFILEMENT */
+    html {
+      scrollbar-gutter: stable;
+    }
+
+    /* 2. APPLIQUE LE BOX-SIZING GLOBAL POUR DES CALCULS DE TAILLE PARFAITS */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background-color: #f4f6f9; 
+      color: #333; 
+      margin: 0; 
+      padding: 20px; 
+    }
+    
+    .container { 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      width: 100%; 
+    }
+    
+    h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+    
     body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
     .container { max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
