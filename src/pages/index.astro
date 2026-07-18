@@ -1,5 +1,7 @@
 ---
-// Page d'accueil avec accès administration sécurisé par code secret
+// @ts-nocheck
+import problems from '../data/problems.json';
+import theorems from '../data/theorems.json';
 ---
 
 <!DOCTYPE html>
@@ -7,7 +9,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Répertoire de problèmes</title>
+  <title>Répertoire de problèmes & théorèmes</title>
+  
+  <!-- Importation de KaTeX pour le rendu mathématique des cartes aléatoires -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
   <style>
     html { 
       scrollbar-gutter: stable; 
@@ -31,7 +39,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 40px 20px;
       width: 100%;
@@ -42,64 +50,160 @@
       -webkit-text-fill-color: transparent;
       font-size: 2.8rem;
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       font-weight: 800;
       letter-spacing: -0.5px;
     }
     .description {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       color: #4a5568;
       text-align: center;
-      max-width: 600px;
+      max-width: 650px;
       line-height: 1.6;
       margin-top: 0;
-      margin-bottom: 45px;
+      margin-bottom: 35px;
     }
+    
+    /* Grille des portails principaux */
     .portal-grid {
-      display: flex;
-      gap: 25px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
       width: 100%;
-      max-width: 650px;
-      flex-direction: column;
+      max-width: 800px;
+      margin-bottom: 40px;
     }
-    @media (min-width: 600px) {
+    @media (min-width: 768px) {
       .portal-grid {
-        flex-direction: row;
+        grid-template-columns: repeat(3, 1fr);
       }
     }
     .portal-btn {
-      flex: 1;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       text-decoration: none;
-      padding: 35px 25px;
-      font-size: 1.3rem;
-      font-weight: 700;
+      padding: 25px 20px;
       border-radius: 12px;
-      min-height: 150px;
+      min-height: 120px;
       transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
     }
+    .portal-btn .btn-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .portal-btn .btn-desc {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      font-weight: 400;
+    }
     
-    .portal-btn.active {
-      background: linear-gradient(135deg, #3498db, #5f27cd);
+    .portal-btn.active-blue {
+      background: linear-gradient(135deg, #2b6cb0, #3182ce);
       color: white;
-      box-shadow: 0 10px 20px rgba(95, 39, 205, 0.2);
+      box-shadow: 0 8px 16px rgba(49, 130, 206, 0.2);
     }
-    .portal-btn.active:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 15px 28px rgba(95, 39, 205, 0.35);
+    .portal-btn.active-purple {
+      background: linear-gradient(135deg, #553c9a, #6b46c1);
+      color: white;
+      box-shadow: 0 8px 16px rgba(107, 70, 193, 0.2);
+    }
+    .portal-btn.active-teal {
+      background: linear-gradient(135deg, #2c7a7b, #319795);
+      color: white;
+      box-shadow: 0 8px 16px rgba(49, 151, 149, 0.2);
     }
     
-    .portal-btn.disabled {
-      background: #e2e8f0;
-      color: #a0aec0;
-      border: 2px dashed #cbd5e0;
-      cursor: not-allowed;
+    .portal-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.15);
     }
-    .portal-btn.disabled:hover {
-      transform: none;
+
+    /* Grille des cartes découvertes aléatoires */
+    .discover-section {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 10px;
+    }
+    .discover-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 15px;
+      text-align: left;
+      border-left: 4px solid #3182ce;
+      padding-left: 10px;
+    }
+    .discover-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .discover-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .discover-card {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      min-height: 220px;
+    }
+    .discover-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      border-color: #cbd5e0;
+    }
+    .card-tag {
+      align-self: flex-start;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    .tag-prob { background: #ebf8ff; color: #2b6cb0; }
+    .tag-theo { background: #faf5ff; color: #553c9a; }
+    
+    .card-header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .card-preview {
+      font-size: 0.95rem;
+      color: #4a5568;
+      line-height: 1.5;
+      flex-grow: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+    .card-footer-info {
+      font-size: 0.8rem;
+      color: #718096;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #edf2f7;
+      padding-top: 10px;
     }
 
     /* Styles du Footer et du système de déverrouillage */
@@ -128,13 +232,14 @@
       width: 140px;
     }
     .admin-links-container {
-      display: none; /* Masqué par défaut */
-      gap: 20px;
+      display: none;
+      gap: 15px;
       flex-wrap: wrap;
       justify-content: center;
+      max-width: 800px;
     }
     .admin-links-container.visible {
-      display: flex; /* Affiché uniquement lorsque la classe est ajoutée */
+      display: flex;
     }
     .admin-link {
       font-size: 13px;
@@ -143,67 +248,166 @@
       transition: color 0.2s, transform 0.2s;
       font-weight: 600;
       display: inline-block;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
     }
     .admin-link:hover {
-      color: #4a5568;
-      transform: scale(1.02);
-    }
-    .admin-p {
-      font-size: 17px;
-      color: #a0aec1;
-      text-decoration: none;
-      transition: color 0.2s, transform 0.2s;
-      font-weight: 600;
-      display: inline-block;
+      color: #2d3748;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Répertoire de problèmes</h1>
+    <h1>Répertoire Mathématique</h1>
     
     <p class="description">
-      Bienvenue sur votre plateforme dédiée à l'entraînement et à la résolution de problèmes mathématiques rigoureux. Sélectionnez une section ci-dessous pour accéder aux énoncés, indices et solutions rédigées.
+      Entraînez-vous sur des problèmes rigoureux et consolidez vos bases théoriques indispensables pour les compétitions et concours olympiques de mathématiques.
     </p>
     
+    <!-- Grille de navigation principale -->
     <div class="portal-grid">
-      <a href="/Prob_Base/general" class="portal-btn active">
-        Problèmes généraux
+      <a href="/Prob_Base/general" class="portal-btn active-blue">
+        <span class="btn-title">Généraux</span>
+        <span class="btn-desc">Problèmes par thèmes</span>
       </a>
       
-      <a href="/Prob_Base/fhb" class="portal-btn active">
-        Problème type Concours FHB
+      <a href="/Prob_Base/fhb" class="portal-btn active-purple">
+        <span class="btn-title">Concours FHB</span>
+        <span class="btn-desc">Type Olympiades / FHB</span>
       </a>
+
+      <a href="/Prob_Base/theorems" class="portal-btn active-teal">
+        <span class="btn-title">Théorèmes</span>
+        <span class="btn-desc">Base de propriétés de cours</span>
+      </a>
+    </div>
+
+    <!-- Section Découverte Aléatoire -->
+    <div class="discover-section">
+      <h2 class="discover-title">Découvertes aléatoires</h2>
+      <div class="discover-grid">
+        
+        <!-- Carte Problème Aléatoire -->
+        <div class="discover-card" id="randomProblemCard">
+          <div>
+            <span class="card-tag tag-prob">Problème</span>
+            <div class="card-header-title" id="problemTitle">Sélection en cours...</div>
+            <div class="card-preview math-target" id="problemStatement">Recherche d'un problème rigoureux...</div>
+          </div>
+          <div class="card-footer-info">
+            <span id="problemCat">Catégorie : -</span>
+            <span id="problemDiff">Niveau : -</span>
+          </div>
+        </div>
+
+        <!-- Carte Théorème Aléatoire -->
+        <div class="discover-card" id="randomTheoremCard">
+          <div>
+            <span class="card-tag tag-theo">Théorème / Propriété</span>
+            <div class="card-header-title" id="theoremTitle">Sélection en cours...</div>
+            <div class="card-preview math-target" id="theoremStatement">Recherche d'un théorème essentiel...</div>
+          </div>
+          <div class="card-footer-info">
+            <span id="theoremCat">Catégorie : -</span>
+            <span id="theoremSource">Source : -</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
   <footer>
-    <!-- Petit champ discret simulé en type password pour masquer la saisie -->
     <input type="password" id="secretGate" class="secret-input" placeholder="Clé d'accès..." />
 
-    <!-- Conteneur d'administration masqué -->
     <div id="adminContainer" class="admin-links-container">
-      <a href="/Prob_Base/admin-add" class="admin-link">⚙️ Ajout -Problèmes généraux</a>
-      <a href="/Prob_Base/admin" class="admin-link">⚙️ Edit -Problèmes généraux</a>
-      <a href="/Prob_Base/adminfhb-add" class="admin-link">⚙️ Ajout -Problèmes FHB</a>
-      <a href="/Prob_Base/adminfhb-edit" class="admin-link">⚙️ Edit -Problèmes FHB</a>
+      <a href="/Prob_Base/admin-add" class="admin-link">⚙️ + Problème Général</a>
+      <a href="/Prob_Base/admin" class="admin-link">⚙️ Éditer Problèmes Généraux</a>
+      <a href="/Prob_Base/adminfhb-add" class="admin-link">⚙️ + Problème FHB</a>
+      <a href="/Prob_Base/adminfhb-edit" class="admin-link">⚙️ Éditer Problèmes FHB</a>
+      <a href="/Prob_Base/admin-theorems-add" class="admin-link" style="border-color: #319795; color: #2c7a7b;">⚙️ + Théorème</a>
     </div>
   </footer>
 
-  <script is:inline>
+  <!-- Injection sécurisée des JSON d'Astro vers le script client-side -->
+  <script is:inline define:vars={{ problems, theorems }}>
     window.addEventListener('DOMContentLoaded', () => {
+      // 1. Déverrouillage Admin
       const secretGate = document.getElementById('secretGate');
       const adminContainer = document.getElementById('adminContainer');
-      
-      // CONFIGURATION : Changez "admin" par le mot secret de votre choix
       const SECRET_KEY = "admin"; 
 
       secretGate.addEventListener('input', () => {
         if (secretGate.value.trim() === SECRET_KEY) {
-          adminContainer.classList.add('visible'); // Affiche les liens
-          secretGate.style.display = 'none';      // Masque définitivement le champ de saisie
+          adminContainer.classList.add('visible');
+          secretGate.style.display = 'none';
         }
       });
+
+      // Dictionnaires de catégories
+      const CATEGORIES = {
+        'A': 'Algèbre',
+        'G': 'Géométrie',
+        'N': 'Théorie des nombres',
+        'C': 'Combinatoire'
+      };
+
+      // 2. Logique du Problème Aléatoire
+      if (problems && problems.length > 0) {
+        const randIdx = Math.floor(Math.random() * problems.length);
+        const prob = problems[randIdx];
+        
+        document.getElementById('problemTitle').innerText = prob.Source ? `Problème (${prob.Source})` : "Problème d'entraînement";
+        document.getElementById('problemStatement').innerText = prob.statement || "Aucun énoncé disponible.";
+        document.getElementById('problemCat').innerText = `Catégorie : ${CATEGORIES[prob.G] || 'Autre'}`;
+        document.getElementById('problemDiff').innerText = `Niveau : ${prob.D || '?'}`;
+        
+        // Redirection au clic
+        document.getElementById('randomProblemCard').addEventListener('click', () => {
+          window.location.href = `/Prob_Base/problems/${prob.id}`;
+        });
+      } else {
+        document.getElementById('problemTitle').innerText = "Aucun problème disponible";
+        document.getElementById('problemStatement').innerText = "Veuillez d'abord enregistrer un problème.";
+      }
+
+      // 3. Logique du Théorème Aléatoire
+      if (theorems && theorems.length > 0) {
+        const randIdx = Math.floor(Math.random() * theorems.length);
+        const theo = theorems[randIdx];
+        
+        document.getElementById('theoremTitle').innerText = theo.title || "Théorème";
+        document.getElementById('theoremStatement').innerText = theo.statement || "Aucun énoncé disponible.";
+        document.getElementById('theoremCat').innerText = `Catégorie : ${CATEGORIES[theo.G] || 'Autre'}`;
+        document.getElementById('theoremSource').innerText = theo.Source ? `Source : ${theo.Source}` : "Source : Standard";
+        
+        // Redirection au clic (cible l'ancre du théorème spécifique)
+        document.getElementById('randomTheoremCard').addEventListener('click', () => {
+          window.location.href = `/Prob_Base/theorems#theorem-${theo.id}`;
+        });
+      } else {
+        document.getElementById('theoremTitle').innerText = "Aucun théorème disponible";
+        document.getElementById('theoremStatement').innerText = "Veuillez d'abord ajouter un théorème théorique.";
+      }
+
+      // 4. Rendu KaTeX des équations mathématiques des cartes
+      if (typeof renderMathInElement === 'function') {
+        document.querySelectorAll('.math-target').forEach(target => {
+          renderMathInElement(target, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+          });
+        });
+      }
     });
   </script>
 </body>
