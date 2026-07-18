@@ -8951,7 +8951,7 @@
     "G": "A",
     "D": 2,
     "T": "",
-    "statement": "\\begin{enumerate}\\item[(a)]{Find the maximum value of the expression \\begin{equation*}x^2y - y^2x\\end{equation*} when $0 \\le x \\le 1$ and $0 \\le y \\le 1$.}\\item[(b)]{Find the maximum value of the expression \\begin{equation*}x^2y + y^2z + z^2x - x^2z - y^2x - z^2y\\end{equation*} when $0 \\le x \\le 1$, $0 \\le y \\le 1$, $0 \\le z \\le 1$.}\\end{enumerate}",
+    "statement": "**Part (a)**\nFind the maximum value of the expression:\n$$x^2y - y^2x$$\nwhen $0 \\le x \\le 1$ and $0 \\le y \\le 1$.\n\n**Part (b)**\nFind the maximum value of the expression:\n$$x^2y + y^2z + z^2x - x^2z - y^2x - z^2y$$\nwhen $0 \\le x \\le 1$, $0 \\le y \\le 1$, and $0 \\le z \\le 1$.",
     "Hint 1": "For (a), what happens as you increase x?",
     "Hint 2": "For (b), take wlog $z$ the smallest of the three, and analyse the terms involving $z$.",
     "Hint 3": "",
