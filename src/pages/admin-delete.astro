@@ -1,0 +1,263 @@
+---
+import problems from '../data/problems.json';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Supprimer un Problème</title>
+  <style>
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { color: #c0392b; text-align: center; margin-top: 10px; }
+    
+    .form-group { margin-bottom: 18px; display: flex; flex-direction: column; position: relative; }
+    label { font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+    
+    .btn-danger { background: #e74c3c; color: white; padding: 14px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-top: 10px; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-danger:disabled { background: #bdc3c7; cursor: not-allowed; }
+    
+    .status { margin-top: 15px; padding: 12px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .security-banner { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; border: 1px solid #f5c6cb; }
+    
+    /* Aperçu du problème sélectionné avant suppression */
+    .preview-box { background: #f8f9fa; border: 1px dashed #7f8c8d; border-radius: 4px; padding: 15px; margin-top: 15px; display: none; }
+    .preview-box h3 { margin-top: 0; color: #2c3e50; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .preview-statement { font-family: monospace; font-size: 14px; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; }
+
+    /* Styles pour la barre de recherche et ses résultats */
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .search-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-item:hover {
+      background: #fdf2f2;
+      color: #c0392b;
+    }
+    .search-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>Supprimer définitivement un problème</h1>
+    
+    <div class="security-banner">
+      <strong>Attention :</strong> Toute suppression est irréversible et sera répercutée immédiatement sur le fichier JSON de votre dépôt GitHub.
+    </div>
+
+    <!-- Configuration de l'accès à GitHub -->
+    <div class="form-group">
+      <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    </div>
+
+    <!-- Barre de recherche dynamique -->
+    <div class="form-group">
+      <label for="probSearch">Rechercher le problème à supprimer</label>
+      <input type="text" id="probSearch" placeholder="Tapez un ID, un titre, ou une source pour chercher..." autocomplete="off" />
+      <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <!-- Zone de confirmation visuelle -->
+    <div id="previewBox" class="preview-box">
+      <h3>Confirmation du problème sélectionné</h3>
+      <p style="margin: 5px 0; font-size: 14px;">
+        <strong>ID :</strong> <span id="lblId"></span> | 
+        <strong>Catégorie :</strong> <span id="lblCat"></span> | 
+        <strong>Difficulté :</strong> <span id="lblDiff"></span>/11<br>
+        <strong>Source :</strong> <span id="lblSource"></span>
+      </p>
+      <div style="margin-top: 8px; font-weight: bold; font-size: 13px; color: #555;">Énoncé :</div>
+      <div id="lblStatement" class="preview-statement"></div>
+      
+      <button type="button" class="btn-danger" id="submitBtn">Confirmer la suppression définitive</button>
+    </div>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script is:inline define:vars={{ problems }}>
+    const probSearch = document.getElementById('probSearch');
+    const searchResults = document.getElementById('searchResults');
+    const previewBox = document.getElementById('previewBox');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    const GH_OWNER = "AsDuClavier"; 
+    const GH_REPO = "Prob_Base";
+    const FILE_PATH = "src/data/problems.json";
+
+    let currentProblem = null;
+
+    // Moteur de recherche dynamique
+    probSearch.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      searchResults.innerHTML = '';
+
+      if (!query) {
+        searchResults.style.display = 'none';
+        return;
+      }
+
+      const matches = problems.filter(p => {
+        const idMatch = p.id.toString() === query;
+        const titleMatch = p.Title && p.Title.toLowerCase().includes(query);
+        const sourceMatch = p.Source && p.Source.toLowerCase().includes(query);
+        const statementMatch = p.statement && p.statement.toLowerCase().includes(query);
+        return idMatch || titleMatch || sourceMatch || statementMatch;
+      }).slice(0, 10);
+
+      if (matches.length > 0) {
+        matches.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          const titleDisplay = p.Title ? ` - ${p.Title}` : '';
+          div.innerHTML = `<strong>[${p.G}] ID ${p.id}</strong>${titleDisplay} <small style="color:#7f8c8d;">(${p.Source || 'Sans source'})</small> — <span>${p.statement || ''}</span>`;
+          
+          div.addEventListener('click', () => {
+            selectProblem(p);
+          });
+          searchResults.appendChild(div);
+        });
+        searchResults.style.display = 'block';
+      } else {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.style.color = '#888';
+        div.innerText = 'Aucun problème trouvé';
+        searchResults.appendChild(div);
+        searchResults.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target !== probSearch && e.target !== searchResults) {
+        searchResults.style.display = 'none';
+      }
+    });
+
+    // Chargement des détails dans le module de confirmation
+    function selectProblem(problem) {
+      currentProblem = problem;
+      const titleContext = problem.Title ? ` (${problem.Title})` : '';
+      probSearch.value = `[${problem.G}] ID ${problem.id}${titleContext}`;
+      searchResults.style.display = 'none';
+
+      document.getElementById('lblId').innerText = problem.id;
+      document.getElementById('lblCat').innerText = problem.G || 'A';
+      document.getElementById('lblDiff').innerText = problem.D || 1;
+      document.getElementById('lblSource').innerText = problem.Source || 'Non renseignée';
+      document.getElementById('lblStatement').innerText = problem.statement || '';
+
+      previewBox.style.display = 'block';
+      statusMessage.style.display = 'none';
+    }
+
+    // Processus de suppression sécurisé sur GitHub
+    submitBtn.addEventListener('click', async () => {
+      if (!currentProblem) return;
+
+      const token = document.getElementById('ghToken').value.trim();
+      if (!token) {
+        showStatus("Veuillez saisir votre token GitHub pour autoriser la suppression.", "error");
+        return;
+      }
+
+      // Double confirmation native navigateur
+      const finalCheck = confirm(`Êtes-vous absolument sûr de vouloir supprimer définitivement le problème ID ${currentProblem.id} ?`);
+      if (!finalCheck) return;
+
+      submitBtn.disabled = true;
+      showStatus("Suppression en cours sur GitHub...", "");
+
+      try {
+        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
+        const getRes = await fetch(url, {
+          headers: { "Authorization": `token ${token}` }
+        });
+
+        if (!getRes.ok) throw new Error("Accès au dépôt refusé. Vérifiez la validité de votre token.");
+        
+        const fileData = await getRes.json();
+        const currentSha = fileData.sha;
+
+        // Filtrage de la liste pour exclure définitivement l'ID sélectionné
+        const updatedProblems = problems.filter(p => p.id !== currentProblem.id);
+
+        const jsonString = JSON.stringify(updatedProblems, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            "Authorization": `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: `Suppression définitive du problème ID ${currentProblem.id} via l'interface Admin`,
+            content: base64Content,
+            sha: currentSha
+          })
+        });
+
+        if (putRes.ok) {
+          showStatus(`Le problème ${currentProblem.id} a été retiré avec succès. Le site se mettra à jour d'ici 2-3 minutes.`, "success");
+          
+          // Nettoyage de l'instance locale pour interdire une double soumission accidentelle
+          const index = problems.findIndex(p => p.id === currentProblem.id);
+          if (index > -1) problems.splice(index, 1);
+          
+          currentProblem = null;
+          probSearch.value = '';
+          previewBox.style.display = 'none';
+        } else {
+          const errorData = await putRes.json();
+          throw new Error(errorData.message || "Erreur de réécriture du fichier JSON.");
+        }
+
+      } catch (err) {
+        showStatus("Erreur : " + err.message, "error");
+        submitBtn.disabled = false;
+      }
+    });
+
+    function showStatus(msg, type) {
+      statusMessage.innerText = msg;
+      statusMessage.className = "status";
+      if (type) statusMessage.classList.add(type);
+      statusMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
