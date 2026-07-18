@@ -17,23 +17,12 @@ const CATEGORIES = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prob Base - Olympiades</title>
   
-  <!-- Configuration globale de MathJax AVANT le chargement du script -->
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true
-      },
-      options: {
-        ignoreHtmlClass: 'tex2jax_ignore',
-        processHtmlClass: 'tex2jax_process'
-      }
-    };
-  </script>
+  <!-- 1. Chargement de la feuille de style KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   
-  <!-- Chargement asynchrone de MathJax 3 (Composant global SVG) -->
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- 2. Chargement des scripts de rendu -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
     body {
@@ -66,7 +55,7 @@ const CATEGORIES = {
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     select {
-      padding: 10px 12px;
+      padding: 10px 12px; /* Légèrement agrandi pour faciliter le clic tactile */
       border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 16px;
@@ -87,7 +76,7 @@ const CATEGORIES = {
     }
     .meta {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: wrap; /* Permet aux badges de passer à la ligne sur les petits écrans */
       gap: 8px;
       margin-bottom: 15px;
       font-size: 14px;
@@ -104,23 +93,42 @@ const CATEGORIES = {
       overflow-wrap: break-word;
     }
 
-    /* Gestion du défilement des équations en bloc trop larges sur mobile */
-    .MathJax_Display {
+    /* Empêche les équations KaTeX en bloc ($$ ... $$) de déformer la page sur mobile */
+    .statement .katex-display {
       overflow-x: auto;
       overflow-y: hidden;
+      padding: 8px 0;
+      margin: 0.5em 0;
     }
 
     .hidden {
       display: none !important;
     }
 
+    /* --- REGLAGES RESPONSIVE POUR TELEPHONES --- */
     @media (max-width: 600px) {
-      body { padding: 12px; }
-      h1 { font-size: 1.5rem; margin-bottom: 20px; }
-      .filters { flex-direction: column; gap: 10px; padding: 12px; }
-      select { width: 100%; font-size: 15px; }
-      .card { padding: 15px; }
-      .statement { font-size: 15px; }
+      body {
+        padding: 12px; /* Moins d'espace perdu sur les bords extérieurs */
+      }
+      h1 {
+        font-size: 1.5rem; /* Titre plus adapté aux petits écrans */
+        margin-bottom: 20px;
+      }
+      .filters {
+        flex-direction: column; /* On empile les filtres verticalement */
+        gap: 10px;
+        padding: 12px;
+      }
+      select {
+        width: 100%; /* Les menus déroulants prennent toute la largeur disponible */
+        font-size: 15px;
+      }
+      .card {
+        padding: 15px; /* Optimisation de l'espace à l'intérieur des cartes */
+      }
+      .statement {
+        font-size: 15px; /* Amélioration du confort de lecture sur petit écran */
+      }
     }
   </style>
 </head>
@@ -169,8 +177,36 @@ const CATEGORIES = {
       const catFilter = document.getElementById('catFilter');
       const diffFilter = document.getElementById('diffFilter');
       const cards = Array.from(document.querySelectorAll('.card'));
+      const statements = Array.from(document.querySelectorAll('.statement'));
 
-      // Filtrage interactif
+      // 1. Rendu KaTeX progressif par paquets (évite le freeze CPU)
+      let index = 0;
+      const batchSize = 15;
+
+      function renderNextBatch() {
+        if (typeof renderMathInElement !== 'function') return;
+
+        const end = Math.min(index + batchSize, statements.length);
+        for (; index < end; index++) {
+          renderMathInElement(statements[index], {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+          });
+        }
+
+        if (index < statements.length) {
+          setTimeout(renderNextBatch, 16);
+        }
+      }
+
+      renderNextBatch();
+
+      // 2. Filtrage interactif
       function filterProblems() {
         const selectedCat = catFilter.value;
         const selectedDiff = diffFilter.value;
@@ -192,4 +228,4 @@ const CATEGORIES = {
     });
   </script>
 </body>
-</html>
+</html> 
