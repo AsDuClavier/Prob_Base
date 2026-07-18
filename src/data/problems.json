@@ -28591,7 +28591,7 @@
     "id": 641,
     "Source": "Fermat's Christmas Theorem (adapted)",
     "G": "N",
-    "D": 5,
+    "D": 2,
     "T": "",
     "statement": "Let $a$ and $b$ be positive integers, and let $p \\equiv 3 \\pmod{4}$ be a prime. Suppose $p$ divides $n=a^2+b^2$. Prove that $n$ is a multiple of $p^2$. ",
     "Hint 1": "",
