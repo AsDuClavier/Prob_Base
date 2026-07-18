@@ -148,12 +148,19 @@
       .then(function(fileData) {
         var currentSha = fileData.sha;
         
-        // Décodage propre et sécurisé du fichier UTF-8 base64
-        var currentContentText = decodeURIComponent(atob(fileData.content).split('').map(function(c) {
+        // 1. Suppression des sauts de ligne / espaces introduits dans le Base64 de l'API
+        var cleanedBase64 = fileData.content.replace(/\s/g, '');
+        
+        // 2. Décodage propre et sécurisé du fichier UTF-8 base64
+        var currentContentText = decodeURIComponent(atob(cleanedBase64).split('').map(function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         
-        var currentProblems = JSON.parse(currentContentText);
+        // 3. Initialisation sécurisée du tableau si le contenu textuel est vide
+        var currentProblems = [];
+        if (currentContentText.trim() !== "") {
+          currentProblems = JSON.parse(currentContentText);
+        }
 
         // Calcul automatique de l'ID suivant
         var nextId = 1;
