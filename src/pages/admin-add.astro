@@ -141,7 +141,7 @@
 
       try {
         // 1. Récupérer le fichier actuel en ligne pour avoir le SHA récent et TOUTES les données à jour
-        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
+        const url = `https://api.github.com/repos/${AsDuClavier}/${Prob_Base}/contents/${FILE_PATH}`;
         const getRes = await fetch(url, {
           headers: { "Authorization": `token ${token}` }
         });
