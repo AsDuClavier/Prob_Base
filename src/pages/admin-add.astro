@@ -46,7 +46,7 @@
     <h1>Ajouter un nouveau problème</h1>
     
     <div class="security-banner">
-      <strong>Mode d'emploi :</strong> Remplissez les champs ci-dessous. Le script calculera le bon ID et insérera le problème à la suite dans votre fichier JSON sur GitHub.
+      <strong>Mode d'emploi :</strong> Remplissez les champs ci-dessous. Le script calculera le bon ID et insérera le problème à la suite dans votre fichier JSON sur GitHub (compatible gros fichiers).
     </div>
 
     <form id="addForm">
@@ -126,14 +126,13 @@
     var GH_REPO = "Prob_Base";
     var FILE_PATH = "src/data/problems.json"; 
 
-    // Fonction utilitaire moderne pour encoder en base64 de manière asynchrone (évite le Stack Overflow)
+    // Encodeur asynchrone robuste en Base64
     function dataToBase64(text) {
       return new Promise(function(resolve, reject) {
         var blob = new Blob([text], { type: 'application/json;charset=utf-8;' });
         var reader = new FileReader();
         reader.onloadend = function() {
-          var base64data = reader.result.split(',')[1];
-          resolve(base64data);
+          resolve(reader.result.split(',')[1]);
         };
         reader.onerror = reject;
         reader.readAsDataURL(blob);
@@ -145,55 +144,64 @@
       
       var token = document.getElementById('ghToken').value.trim();
       submitBtn.disabled = true;
-      showStatus("Connexion à GitHub et récupération du fichier de données...", "");
+      showStatus("Récupération des métadonnées du fichier...", "");
 
-      var url = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + FILE_PATH;
+      var contentUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + FILE_PATH;
+      var currentSha = "";
 
-      fetch(url, {
-        headers: { "Authorization": "token " + token }
-      })
+      // Étape 1 : Récupérer le SHA du fichier actuel via l'API Contents
+      fetch(contentUrl, { headers: { "Authorization": "token " + token } })
       .then(function(res) {
-        if (!res.ok) {
-          throw new Error("Impossible d'accéder au dépôt GitHub. Vérifiez le fichier ou les droits du Token.");
-        }
+        if (!res.ok) throw new Error("Impossible d'accéder au fichier sur le dépôt.");
         return res.json();
       })
-      .then(function(fileData) {
-        var currentSha = fileData.sha;
+      .then(function(metaData) {
+        currentSha = metaData.sha;
+        showStatus("Téléchargement du contenu (Méthode Blob sécurisée)...", "");
         
-        // 1. Nettoyage et conversion sécurisée du Base64 GitHub
-        var cleanedBase64 = fileData.content.replace(/\s/g, '');
+        // Étape 2 : Récupérer le contenu brut via l'API Git Blobs (sans limite de taille)
+        var blobUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/git/blobs/" + currentSha;
+        return fetch(blobUrl, { headers: { "Authorization": "token " + token } });
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Échec du téléchargement du contenu brut (Blob).");
+        return res.json();
+      })
+      .then(function(blobData) {
+        if (!blobData.content) {
+          throw new Error("Erreur critique : GitHub a renvoyé un contenu vide.");
+        }
+
+        // Décodage UTF-8 à l'épreuve des gros volumes
+        var cleanedBase64 = blobData.content.replace(/\s/g, '');
         var binaryString = atob(cleanedBase64);
         var bytes = new Uint8Array(binaryString.length);
         for (var i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
         
-        // 2. Décodage parfait en UTF-8
         var decoder = new TextDecoder('utf-8');
         var currentContentText = decoder.decode(bytes);
         
-        // 3. Parsing sécurisé du JSON existant
+        // Parsing et validation stricte
         var currentProblems = [];
         if (currentContentText.trim() !== "") {
-          try {
-            currentProblems = JSON.parse(currentContentText);
-            if (!Array.isArray(currentProblems)) {
-              throw new Error("Le format du fichier JSON n'est pas un tableau.");
-            }
-          } catch(e) {
-            throw new Error("Erreur de décodage du JSON existant : " + e.message);
+          currentProblems = JSON.parse(currentContentText);
+          if (!Array.isArray(currentProblems)) {
+            throw new Error("Garde-fou activé : Les données distantes ne sont pas stockées sous forme de liste []. Action annulée.");
           }
+        } else {
+          throw new Error("Garde-fou activé : Le fichier distant a été lu comme vide. Pour éviter d'écraser vos données, l'opération est annulée.");
         }
 
-        // 4. Calcul automatique de l'ID suivant
+        // Calcul automatique de l'ID
         var nextId = 1;
         if (currentProblems.length > 0) {
           var ids = currentProblems.map(function(p) { return parseInt(p.id || 0); });
           nextId = Math.max.apply(null, ids) + 1;
         }
 
-        // Récupération des valeurs du formulaire
+        // Récolte des données du formulaire
         var sourceVal = document.getElementById('source').value.trim();
         var imgVal = document.getElementById('imageLink').value.trim();
         var h1Val = document.getElementById('hint1').value.trim();
@@ -201,7 +209,6 @@
         var solVal = document.getElementById('solution').value.trim();
         var solLinkVal = document.getElementById('solutionLink').value.trim();
 
-        // Nouveau problème structuré
         var newProblem = {
           id: nextId,
           statement: document.getElementById('statement').value,
@@ -216,40 +223,35 @@
         if (solVal) newProblem["Solution"] = solVal;
         if (solLinkVal) newProblem["Solution Link"] = solLinkVal;
 
-        // Insertion à la suite
         currentProblems.push(newProblem);
 
-        // 5. Encodage lourd asynchrone (Zéro risque de perte de données ou crash)
         var updatedJsonString = JSON.stringify(currentProblems, null, 2);
-        showStatus("Préparation des données sécurisée...", "");
+        showStatus("Calcul du nouvel encodage...", "");
 
-        return dataToBase64(updatedJsonString).then(function(base64Content) {
-          // Double vérification de garde-fou avant envoi
-          if (!base64Content || base64Content.length < 10) {
-            throw new Error("Erreur critique : Échec de la génération du contenu Base64.");
-          }
-          
-          showStatus("Envoi du problème #" + nextId + " vers GitHub...", "");
+        return dataToBase64(updatedJsonString);
+      })
+      .then(function(base64Content) {
+        showStatus("Envoi du problème mis à jour vers GitHub...", "");
 
-          return fetch(url, {
-            method: 'PUT',
-            headers: {
-              "Authorization": "token " + token,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              message: "Ajout automatique du problème ID " + nextId + " via l'interface Admin",
-              content: base64Content,
-              sha: currentSha
-            })
-          });
+        // Étape 3 : Réécriture via l'API Contents (qui accepte les PUT, contrairement à l'API Blob)
+        return fetch(contentUrl, {
+          method: 'PUT',
+          headers: {
+            "Authorization": "token " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: "Ajout automatique du problème via l'interface Admin (Gestion gros volumes)",
+            content: base64Content,
+            sha: currentSha
+          })
         });
       })
       .then(function(putRes) {
-        if (!putRes) return; // Erreur interceptée plus haut
+        if (!putRes) return;
         if (putRes.ok) {
-          showStatus("Bravo ! Le problème a été intégré avec succès. Le site va se mettre à jour d'ici 2 minutes.", "success");
-          var savedToken = document.getElementById('ghToken').value.trim();
+          showStatus("Bravo ! Le problème a été intégré avec succès sans altérer vos données.", "success");
+          var savedToken = token;
           addForm.reset();
           document.getElementById('ghToken').value = savedToken;
         } else {
@@ -260,6 +262,7 @@
       })
       .catch(function(err) {
         showStatus("Erreur : " + err.message, "error");
+        console.error(err);
       })
       .finally(function() {
         submitBtn.disabled = false;
