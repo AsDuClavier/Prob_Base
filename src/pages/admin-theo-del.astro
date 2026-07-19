@@ -1,0 +1,280 @@
+---
+import theorems from '../data/theorems.json';
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Supprimer un Théorème</title>
+  <style>
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    .admin-container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    
+    .nav-links { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .back-btn { display: inline-block; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    .back-btn:hover { background: #2c3e50; }
+
+    h1 { color: #c0392b; text-align: center; margin-top: 10px; }
+    
+    .form-group { margin-bottom: 18px; display: flex; flex-direction: column; position: relative; }
+    label { font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
+    input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; width: 100%; }
+    
+    .btn-danger { background: #e74c3c; color: white; padding: 14px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-top: 10px; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-danger:disabled { background: #bdc3c7; cursor: not-allowed; }
+    
+    .status { margin-top: 15px; padding: 12px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .security-banner { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; border: 1px solid #f5c6cb; }
+    
+    /* Aperçu du théorème sélectionné avant suppression */
+    .preview-box { background: #f8f9fa; border: 1px dashed #7f8c8d; border-radius: 4px; padding: 15px; margin-top: 15px; display: none; }
+    .preview-box h3 { margin-top: 0; color: #2c3e50; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .preview-statement { font-family: monospace; font-size: 14px; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; }
+
+    /* Styles pour la barre de recherche et ses résultats */
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .search-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-item:hover {
+      background: #fdf2f2;
+      color: #c0392b;
+    }
+    .search-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="nav-links">
+      <a href="/Prob_Base/" class="back-btn">← Accueil</a>
+    </div>
+
+    <h1>Supprimer définitivement un théorème</h1>
+    
+    <div class="security-banner">
+      <strong>Attention :</strong> Toute suppression est irréversible et sera répercutée immédiatement sur le fichier JSON de votre dépôt GitHub.
+    </div>
+
+    <!-- Configuration de l'accès à GitHub -->
+    <div class="form-group">
+      <label for="ghToken">Jeton d'accès GitHub (Token PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    </div>
+
+    <!-- Barre de recherche dynamique -->
+    <div class="form-group">
+      <label for="theoSearch">Rechercher le théorème à supprimer</label>
+      <input type="text" id="theoSearch" placeholder="Tapez un ID, un titre, ou une source pour chercher..." autocomplete="off" />
+      <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <!-- Zone de confirmation visuelle -->
+    <div id="previewBox" class="preview-box">
+      <h3>Confirmation du théorème sélectionné</h3>
+      <p style="margin: 5px 0; font-size: 14px;">
+        <strong>ID :</strong> <span id="lblId"></span> | 
+        <strong>Catégorie :</strong> <span id="lblCat"></span> | 
+        <strong>Source :</strong> <span id="lblSource"></span><br>
+        <strong>Titre :</strong> <span id="lblTitle" style="font-weight: bold; color: #2c3e50;"></span>
+      </p>
+      <div style="margin-top: 8px; font-weight: bold; font-size: 13px; color: #555;">Énoncé :</div>
+      <div id="lblStatement" class="preview-statement"></div>
+      
+      <button type="button" class="btn-danger" id="submitBtn">Confirmer la suppression définitive</button>
+    </div>
+
+    <div id="statusMessage" class="status"></div>
+  </div>
+
+  <script is:inline define:vars={{ theorems }}>
+    const theoSearch = document.getElementById('theoSearch');
+    const searchResults = document.getElementById('searchResults');
+    const previewBox = document.getElementById('previewBox');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    const GH_OWNER = "asduclavier"; 
+    const GH_REPO = "Prob_Base";
+    const FILE_PATH = "src/data/theorems.json";
+
+    const CATEGORIES = {
+      'A': 'Algèbre',
+      'G': 'Géométrie',
+      'N': 'Théorie des nombres',
+      'C': 'Combinatoire'
+    };
+
+    let currentTheorem = null;
+
+    // Moteur de recherche dynamique
+    theoSearch.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      searchResults.innerHTML = '';
+
+      if (!query) {
+        searchResults.style.display = 'none';
+        return;
+      }
+
+      const matches = theorems.filter(t => {
+        if (!t) return false;
+        const idMatch = t.id && t.id.toString() === query;
+        const titleMatch = t.title && t.title.toLowerCase().includes(query);
+        const sourceMatch = t.Source && t.Source.toLowerCase().includes(query);
+        const statementMatch = t.statement && t.statement.toLowerCase().includes(query);
+        return idMatch || titleMatch || sourceMatch || statementMatch;
+      }).slice(0, 10);
+
+      if (matches.length > 0) {
+        matches.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          const titleDisplay = t.title ? ` - ${t.title}` : '';
+          div.innerHTML = `<strong>[${t.G || '?'}] ID ${t.id}</strong>${titleDisplay} <small style="color:#7f8c8d;">(${t.Source || 'Sans source'})</small> — <span>${t.statement || ''}</span>`;
+          
+          div.addEventListener('click', () => {
+            selectTheorem(t);
+          });
+          searchResults.appendChild(div);
+        });
+        searchResults.style.display = 'block';
+      } else {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.style.color = '#888';
+        div.innerText = 'Aucun théorème trouvé';
+        searchResults.appendChild(div);
+        searchResults.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target !== theoSearch && e.target !== searchResults) {
+        searchResults.style.display = 'none';
+      }
+    });
+
+    // Chargement des détails dans le module de confirmation
+    function selectTheorem(theorem) {
+      currentTheorem = theorem;
+      const titleContext = theorem.title ? ` (${theorem.title})` : '';
+      theoSearch.value = `[${theorem.G || '?'}] ID ${theorem.id}${titleContext}`;
+      searchResults.style.display = 'none';
+
+      document.getElementById('lblId').innerText = theorem.id;
+      document.getElementById('lblCat').innerText = CATEGORIES[theorem.G] || theorem.G || 'Général';
+      document.getElementById('lblSource').innerText = theorem.Source || 'Non renseignée';
+      document.getElementById('lblTitle').innerText = theorem.title || 'Sans titre';
+      document.getElementById('lblStatement').innerText = theorem.statement || '';
+
+      previewBox.style.display = 'block';
+      statusMessage.style.display = 'none';
+    }
+
+    // Processus de suppression sécurisé sur GitHub
+    submitBtn.addEventListener('click', async () => {
+      if (!currentTheorem) return;
+
+      const token = document.getElementById('ghToken').value.trim();
+      if (!token) {
+        showStatus("Veuillez saisir votre token GitHub pour autoriser la suppression.", "error");
+        return;
+      }
+
+      // Double confirmation native navigateur
+      const finalCheck = confirm(`Êtes-vous absolument sûr de vouloir supprimer définitivement le théorème ID ${currentTheorem.id} ("${currentTheorem.title || 'Sans titre'}") ?`);
+      if (!finalCheck) return;
+
+      submitBtn.disabled = true;
+      showStatus("Suppression en cours sur GitHub...", "");
+
+      try {
+        const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
+        const getRes = await fetch(url, {
+          headers: { "Authorization": `token ${token}` }
+        });
+
+        if (!getRes.ok) throw new Error("Accès au dépôt refusé. Vérifiez la validité de votre token.");
+        
+        const fileData = await getRes.json();
+        const currentSha = fileData.sha;
+
+        // Filtrage de la liste pour exclure définitivement l'ID sélectionné
+        const updatedTheorems = theorems.filter(t => t && t.id !== currentTheorem.id);
+
+        const jsonString = JSON.stringify(updatedTheorems, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            "Authorization": `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: `Suppression définitive du théorème ID ${currentTheorem.id} via l'interface Admin`,
+            content: base64Content,
+            sha: currentSha
+          })
+        });
+
+        if (putRes.ok) {
+          showStatus(`Le théorème ${currentTheorem.id} a été retiré avec succès. Le site se mettra à jour d'ici 2-3 minutes.`, "success");
+          
+          // Nettoyage de l'instance locale pour interdire une double soumission accidentelle
+          const index = theorems.findIndex(t => t && t.id === currentTheorem.id);
+          if (index > -1) theorems.splice(index, 1);
+          
+          currentTheorem = null;
+          theoSearch.value = '';
+          previewBox.style.display = 'none';
+        } else {
+          const errorData = await putRes.json();
+          throw new Error(errorData.message || "Erreur de réécriture du fichier JSON.");
+        }
+
+      } catch (err) {
+        showStatus("Erreur : " + err.message, "error");
+        submitBtn.disabled = false;
+      }
+    });
+
+    function showStatus(msg, type) {
+      statusMessage.innerText = msg;
+      statusMessage.className = "status";
+      if (type) statusMessage.classList.add(type);
+      statusMessage.style.display = "block";
+    }
+  </script>
+</body>
+</html>
