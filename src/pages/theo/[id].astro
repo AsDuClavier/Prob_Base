@@ -56,11 +56,16 @@ const CATEGORIES = {
     .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .btn-toggle { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; transition: all 0.2s; }
     .btn-toggle:hover { background: #e9ecef; }
-    .btn-sol { color: #2ecc71; border-color: #2ecc71; }
-    .btn-sol:hover { background: #eafaf1; }
+    
+    /* Boutons de style vert pour la section théorèmes */
+    .btn-demo { color: #2ecc71; border-color: #2ecc71; }
+    .btn-demo:hover { background: #eafaf1; }
+    .btn-app { color: #9b59b6; border-color: #9b59b6; }
+    .btn-app:hover { background: #f5eef8; }
 
     .drawer { display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #bdc3c7; border-radius: 4px; word-break: break-word; }
-    .drawer-sol { border-left-color: #2ecc71; background: #fafdfb; }
+    .drawer-demo { border-left-color: #2ecc71; background: #fafdfb; }
+    .drawer-app { border-left-color: #9b59b6; background: #fcfbfe; }
     .drawer.open { display: block; }
     
     .ext-link { display: inline-block; margin-top: 10px; color: #2ecc71; font-weight: bold; text-decoration: none; }
@@ -110,20 +115,29 @@ const CATEGORIES = {
     <div class="actions">
       {theo["Hint 1"] && <button class="btn-toggle" data-toggle="h1-indiv">Afficher l'indice 1</button>}
       {theo["Hint 2"] && <button class="btn-toggle" data-toggle="h2-indiv">Afficher l'indice 2</button>}
-      {theo.Solution && <button class="btn-toggle btn-sol" data-toggle="sol-indiv">Afficher la Démonstration</button>}
+      {theo.Demonstration && <button class="btn-toggle btn-demo" data-toggle="demo-indiv">Afficher la Démonstration</button>}
+      {theo.Applications && <button class="btn-toggle btn-app" data-toggle="app-indiv">Afficher les Exemples d'applications</button>}
     </div>
 
     {theo["Hint 1"] && <div class="drawer" id="h1-indiv"><p><strong>Indice 1 :</strong> {theo["Hint 1"]}</p></div>}
     {theo["Hint 2"] && <div class="drawer" id="h2-indiv"><p><strong>Indice 2 :</strong> {theo["Hint 2"]}</p></div>}
-    {theo.Solution && (
-      <div class="drawer drawer-sol" id="sol-indiv">
+    
+    {theo.Demonstration && (
+      <div class="drawer drawer-demo" id="demo-indiv">
         <p><strong>Démonstration :</strong></p>
-        <div>{theo.Solution}</div>
+        <div>{theo.Demonstration}</div>
         {theo["Solution Link"] && theo["Solution Link"] !== "" && (
           <a href={theo["Solution Link"]} target="_blank" rel="noopener noreferrer" class="ext-link">
             Consulter le lien externe ↗
           </a>
         )}
+      </div>
+    )}
+
+    {theo.Applications && (
+      <div class="drawer drawer-app" id="app-indiv">
+        <p><strong>Exemples d'applications :</strong></p>
+        <div>{theo.Applications}</div>
       </div>
     )}
   </div>
@@ -139,8 +153,10 @@ const CATEGORIES = {
             const isOpened = drawer.classList.contains('open');
             btn.style.background = isOpened ? '#e2e8f0' : '';
             
-            if(btn.classList.contains('btn-sol')) {
+            if(btn.classList.contains('btn-demo')) {
               btn.innerText = isOpened ? "Masquer la Démonstration" : "Afficher la Démonstration";
+            } else if(btn.classList.contains('btn-app')) {
+              btn.innerText = isOpened ? "Masquer les Exemples d'applications" : "Afficher les Exemples d'applications";
             } else {
               const num = targetId.includes('h1') ? '1' : '2';
               btn.innerText = isOpened ? `Masquer l'indice ${num}` : `Afficher l'indice ${num}`;
