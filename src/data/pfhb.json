@@ -18,5 +18,11 @@
     "id": 3,
     "statement": "Find the solution of the functional equation $P(x)+P(1-x)=1$ with power $2015$\n\nP.S: $P(y)=y^{2015}$ is also a function with power $2015$",
     "G": "1T"
+  },
+  {
+    "id": 4,
+    "statement": "At least how many numbers must be deleted from the product $1 \\times 2 \\times \\dots \\times 22 \\times 23$ in order to make it a perfect square?",
+    "G": "1T",
+    "Solution": "$23! = 2^{19} \\cdot 3^{9} \\cdot 5^{4} \\cdot 7^{3} \\cdot 11^2 \\cdot 13 \\cdot 17 \\cdot 19 \\cdot 23$.\nSo we have to remove $\\{2,3,7,13,17,19,23 \\}$. To reduce the cardinality of the set, we can multiply $2$ and $3$ to get $6$, as a result we get $\\{6,7,13,17,19,23 \\}$. We cannot $2$ numbers anymore, hence $\\boxed{\\textbf{6}}$ is the minimum number of numbers than need to be removed."
   }
 ]
