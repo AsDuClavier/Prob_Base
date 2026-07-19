@@ -13,5 +13,10 @@
     "statement": "Soit $A$ et $B$ deux points distincts du plan et $G$ le point tel que $A$ soit le milieu de $[GB]$.\n\n1. Montrer que l'ensemble $(\\mathcal{C})$ des points $N$ du plan tels que $\\frac{NB}{NA}=\\sqrt{2}$ est un cercle de centre $G$ dont on précisera le rayon en fonction de $AB$.\n2. Soit $C$ un point de $(\\mathcal{C})$ et $(\\mathcal{L})$ l'ensemble des points $M$ du plan tels que $2MA^{2}-MB^{2}-MC^{2}=0$.\n   a. Montrer que le point $C$ appartient à $(\\mathcal{L})$.  \n   b. Montrer que pour tout point $M$ de $(\\mathcal{L})$, on a $\\vec{MC}\\cdot\\vec{CG}=0$.  \n   c. Déterminer et construire l'ensemble $(\\mathcal{L})$.",
     "G": "1T",
     "Source": "Concours FHB 2024, phase finale"
+  },
+  {
+    "id": 3,
+    "statement": "Find the solution of the functional equation $P(x)+P(1-x)=1$ with power $2015$\n\nP.S: $P(y)=y^{2015}$ is also a function with power $2015$",
+    "G": "1T"
   }
 ]
