@@ -9,20 +9,16 @@ import theorems from '../data/theorems.json';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Répertoire de problèmes & théorèmes</title>
+  <title>Répertoire de problèmes & Théorèmes</title>
   
-  <!-- Importation de KaTeX pour le rendu mathématique des cartes aléatoires -->
+  <!-- Chargement de KaTeX pour les cartes aléatoires -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
-    html { 
-      scrollbar-gutter: stable; 
-    }
-    *, *::before, *::after { 
-      box-sizing: border-box; 
-    }
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background-color: #f0f4f8;
@@ -45,298 +41,174 @@ import theorems from '../data/theorems.json';
       width: 100%;
     }
     h1 {
-      background: linear-gradient(135deg, #1e3c72, #3498db);
+      background: linear-gradient(135deg, #1e3c72, #2ecc71);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-size: 2.8rem;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       font-weight: 800;
       letter-spacing: -0.5px;
     }
     .description {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       color: #4a5568;
       text-align: center;
-      max-width: 650px;
+      max-width: 600px;
       line-height: 1.6;
       margin-top: 0;
-      margin-bottom: 35px;
+      margin-bottom: 40px;
     }
-    
-    /* Grille des portails principaux */
     .portal-grid {
-      display: grid;
-      grid-template-columns: 1fr;
+      display: flex;
       gap: 20px;
       width: 100%;
       max-width: 800px;
-      margin-bottom: 40px;
+      flex-direction: column;
+      margin-bottom: 45px;
     }
-    @media (min-width: 768px) {
-      .portal-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
+    @media (min-width: 600px) {
+      .portal-grid { flex-direction: row; }
     }
     .portal-btn {
+      flex: 1;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
       text-decoration: none;
-      padding: 25px 20px;
+      padding: 30px 20px;
+      font-size: 1.25rem;
+      font-weight: 700;
       border-radius: 12px;
       min-height: 120px;
       transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
-    }
-    .portal-btn .btn-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-    .portal-btn .btn-desc {
-      font-size: 0.85rem;
-      opacity: 0.85;
-      font-weight: 400;
+      color: white;
     }
     
-    .portal-btn.active-blue {
-      background: linear-gradient(135deg, #2b6cb0, #3182ce);
-      color: white;
-      box-shadow: 0 8px 16px rgba(49, 130, 206, 0.2);
+    .portal-btn.prob-gen {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      box-shadow: 0 8px 16px rgba(52, 152, 219, 0.2);
     }
-    .portal-btn.active-purple {
-      background: linear-gradient(135deg, #553c9a, #6b46c1);
-      color: white;
-      box-shadow: 0 8px 16px rgba(107, 70, 193, 0.2);
+    .portal-btn.prob-fhb {
+      background: linear-gradient(135deg, #e67e22, #d35400);
+      box-shadow: 0 8px 16px rgba(230, 126, 34, 0.2);
     }
-    .portal-btn.active-teal {
-      background: linear-gradient(135deg, #2c7a7b, #319795);
-      color: white;
-      box-shadow: 0 8px 16px rgba(49, 151, 149, 0.2);
+    .portal-btn.theorems {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      box-shadow: 0 8px 16px rgba(46, 204, 113, 0.2);
     }
-    
     .portal-btn:hover {
       transform: translateY(-5px);
-      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
     }
 
-    /* Grille des cartes découvertes aléatoires */
-    .discover-section {
+    /* Section Aléatoire */
+    .random-section {
       width: 100%;
       max-width: 800px;
-      margin-top: 10px;
-    }
-    .discover-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #2d3748;
-      margin-bottom: 15px;
-      text-align: left;
-      border-left: 4px solid #3182ce;
-      padding-left: 10px;
-    }
-    .discover-grid {
-      display: grid;
-      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
-      width: 100%;
     }
     @media (min-width: 768px) {
-      .discover-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+      .random-section { flex-direction: row; }
     }
-    .discover-card {
+    .random-card {
+      flex: 1;
       background: white;
-      border-radius: 12px;
-      padding: 22px;
+      padding: 20px;
+      border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-      border: 1px solid #e2e8f0;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-      min-height: 220px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border-top: 4px solid #ccc;
     }
-    .discover-card:hover {
+    .random-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-      border-color: #cbd5e0;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
     }
-    .card-tag {
-      align-self: flex-start;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin-bottom: 12px;
-    }
-    .tag-prob { background: #ebf8ff; color: #2b6cb0; }
-    .tag-theo { background: #faf5ff; color: #553c9a; }
+    .random-card.prob { border-top-color: #3498db; }
+    .random-card.theo { border-top-color: #2ecc71; }
     
-    .card-header-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #1a202c;
-      margin-bottom: 8px;
-      line-height: 1.3;
+    .random-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #718096;
     }
-    .card-preview {
-      font-size: 0.95rem;
+    .random-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+    .random-snippet {
+      font-size: 14px;
       color: #4a5568;
       line-height: 1.5;
-      flex-grow: 1;
       display: -webkit-box;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-bottom: 15px;
-    }
-    .card-footer-info {
-      font-size: 0.8rem;
-      color: #718096;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #edf2f7;
-      padding-top: 10px;
     }
 
-    /* Styles du Footer et du système de déverrouillage */
-    footer {
-      padding: 30px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      width: 100%;
-    }
-    .secret-input {
-      padding: 6px 12px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      font-size: 12px;
-      outline: none;
-      text-align: center;
-      width: 120px;
-      background: transparent;
-      color: #718096;
-      transition: all 0.2s ease;
-    }
-    .secret-input:focus {
-      border-color: #a0aec0;
-      width: 140px;
-    }
-    .admin-links-container {
-      display: none;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 800px;
-    }
-    .admin-links-container.visible {
-      display: flex;
-    }
-    .admin-link {
-      font-size: 13px;
-      color: #a0aec0;
-      text-decoration: none;
-      transition: color 0.2s, transform 0.2s;
-      font-weight: 600;
-      display: inline-block;
-      background: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-    }
-    .admin-link:hover {
-      color: #2d3748;
-      border-color: #cbd5e0;
-      transform: translateY(-1px);
-    }
+    /* Footer & Admin */
+    footer { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+    .secret-input { padding: 6px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12px; outline: none; text-align: center; width: 120px; background: transparent; color: #718096; transition: all 0.2s ease; }
+    .secret-input:focus { border-color: #a0aec0; width: 140px; }
+    .admin-links-container { display: none; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 700px; }
+    .admin-links-container.visible { display: flex; }
+    .admin-link { font-size: 13px; color: #a0aec0; text-decoration: none; transition: color 0.2s; font-weight: 600; }
+    .admin-link:hover { color: #4a5568; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Répertoire Mathématique</h1>
+    <h1>Répertoire de problèmes</h1>
     
     <p class="description">
-      Entraînez-vous sur des problèmes rigoureux et consolidez vos bases théoriques indispensables pour les compétitions et concours olympiques de mathématiques.
+      Plateforme dédiée à l'entraînement et à la résolution de structures mathématiques rigoureuses. Sélectionnez une section ou explorez les découvertes aléatoires.
     </p>
     
-    <!-- Grille de navigation principale -->
     <div class="portal-grid">
-      <a href="/Prob_Base/general" class="portal-btn active-blue">
-        <span class="btn-title">Généraux</span>
-        <span class="btn-desc">Problèmes par thèmes</span>
-      </a>
-      
-      <a href="/Prob_Base/fhb" class="portal-btn active-purple">
-        <span class="btn-title">Concours FHB</span>
-        <span class="btn-desc">Type Olympiades / FHB</span>
-      </a>
-
-      <a href="/Prob_Base/theorems" class="portal-btn active-teal">
-        <span class="btn-title">Théorèmes</span>
-        <span class="btn-desc">Base de propriétés de cours</span>
-      </a>
+      <a href="/Prob_Base/general" class="portal-btn prob-gen">Problèmes généraux</a>
+      <a href="/Prob_Base/fhb" class="portal-btn prob-fhb">Concours FHB</a>
+      <a href="/Prob_Base/theorems" class="portal-btn theorems">Théorèmes</a>
     </div>
 
-    <!-- Section Découverte Aléatoire -->
-    <div class="discover-section">
-      <h2 class="discover-title">Découvertes aléatoires</h2>
-      <div class="discover-grid">
-        
-        <!-- Carte Problème Aléatoire -->
-        <div class="discover-card" id="randomProblemCard">
-          <div>
-            <span class="card-tag tag-prob">Problème</span>
-            <div class="card-header-title" id="problemTitle">Sélection en cours...</div>
-            <div class="card-preview math-target" id="problemStatement">Recherche d'un problème rigoureux...</div>
-          </div>
-          <div class="card-footer-info">
-            <span id="problemCat">Catégorie : -</span>
-            <span id="problemDiff">Niveau : -</span>
-          </div>
-        </div>
+    <div class="random-section">
+      <div class="random-card prob" id="randProbCard">
+        <h3>Problème Aléatoire 🎲</h3>
+        <div class="random-title" id="randProbTitle">Chargement...</div>
+        <div class="random-snippet math-target" id="randProbSnippet"></div>
+      </div>
 
-        <!-- Carte Théorème Aléatoire -->
-        <div class="discover-card" id="randomTheoremCard">
-          <div>
-            <span class="card-tag tag-theo">Théorème / Propriété</span>
-            <div class="card-header-title" id="theoremTitle">Sélection en cours...</div>
-            <div class="card-preview math-target" id="theoremStatement">Recherche d'un théorème essentiel...</div>
-          </div>
-          <div class="card-footer-info">
-            <span id="theoremCat">Catégorie : -</span>
-            <span id="theoremSource">Source : -</span>
-          </div>
-        </div>
-
+      <div class="random-card theo" id="randTheoCard">
+        <h3>Théorème Aléatoire 💡</h3>
+        <div class="random-title" id="randTheoTitle">Chargement...</div>
+        <div class="random-snippet math-target" id="randTheoSnippet"></div>
       </div>
     </div>
   </div>
 
   <footer>
     <input type="password" id="secretGate" class="secret-input" placeholder="Clé d'accès..." />
-
     <div id="adminContainer" class="admin-links-container">
-      <a href="/Prob_Base/admin-add" class="admin-link">⚙️ + Problème Général</a>
-      <a href="/Prob_Base/admin" class="admin-link">⚙️ Éditer Problèmes Généraux</a>
-      <a href="/Prob_Base/adminfhb-add" class="admin-link">⚙️ + Problème FHB</a>
-      <a href="/Prob_Base/adminfhb-edit" class="admin-link">⚙️ Éditer Problèmes FHB</a>
-      <a href="/Prob_Base/admin-theorems-add" class="admin-link" style="border-color: #319795; color: #2c7a7b;">⚙️ + Théorème</a>
+      <a href="/Prob_Base/admin-add" class="admin-link">⚙️+ Problèmes Généraux</a>
+      <a href="/Prob_Base/admin" class="admin-link">⚙️✏️ Problèmes Généraux</a>
+      <a href="/Prob_Base/adminfhb-add" class="admin-link">⚙️+ Problèmes FHB</a>
+      <a href="/Prob_Base/adminfhb-edit" class="admin-link">⚙️✏️ Problèmes FHB</a>
+      <a href="/Prob_Base/admin-theorems-add" class="admin-link">⚙️+ Théorèmes</a>
     </div>
   </footer>
 
-  <!-- Injection sécurisée des JSON d'Astro vers le script client-side -->
+  <!-- Injection sécurisée des listes JSON dans le script client -->
   <script is:inline define:vars={{ problems, theorems }}>
     window.addEventListener('DOMContentLoaded', () => {
-      // 1. Déverrouillage Admin
+      // 1. Gestion Authentification Secrète
       const secretGate = document.getElementById('secretGate');
       const adminContainer = document.getElementById('adminContainer');
       const SECRET_KEY = "admin"; 
@@ -348,64 +220,34 @@ import theorems from '../data/theorems.json';
         }
       });
 
-      // Dictionnaires de catégories
-      const CATEGORIES = {
-        'A': 'Algèbre',
-        'G': 'Géométrie',
-        'N': 'Théorie des nombres',
-        'C': 'Combinatoire'
-      };
-
-      // 2. Logique du Problème Aléatoire
+      // 2. Sélection Aléatoire Problème
       if (problems && problems.length > 0) {
-        const randIdx = Math.floor(Math.random() * problems.length);
-        const prob = problems[randIdx];
-        
-        document.getElementById('problemTitle').innerText = prob.Source ? `Problème (${prob.Source})` : "Problème d'entraînement";
-        document.getElementById('problemStatement').innerText = prob.statement || "Aucun énoncé disponible.";
-        document.getElementById('problemCat').innerText = `Catégorie : ${CATEGORIES[prob.G] || 'Autre'}`;
-        document.getElementById('problemDiff').innerText = `Niveau : ${prob.D || '?'}`;
-        
-        // Redirection au clic
-        document.getElementById('randomProblemCard').addEventListener('click', () => {
-          window.location.href = `/Prob_Base/problems/${prob.id}`;
+        const randProb = problems[Math.floor(Math.random() * problems.length)];
+        document.getElementById('randProbTitle').innerText = randProb.Source ? `Source : ${randProb.Source}` : `Problème n°${randProb.id}`;
+        document.getElementById('randProbSnippet').innerText = randProb.statement || "";
+        document.getElementById('randProbCard').addEventListener('click', () => {
+          window.location.href = `/Prob_Base/problems/${randProb.id}`;
         });
-      } else {
-        document.getElementById('problemTitle').innerText = "Aucun problème disponible";
-        document.getElementById('problemStatement').innerText = "Veuillez d'abord enregistrer un problème.";
       }
 
-      // 3. Logique du Théorème Aléatoire
+      // 3. Sélection Aléatoire Théorème
       if (theorems && theorems.length > 0) {
-        const randIdx = Math.floor(Math.random() * theorems.length);
-        const theo = theorems[randIdx];
-        
-        document.getElementById('theoremTitle').innerText = theo.title || "Théorème";
-        document.getElementById('theoremStatement').innerText = theo.statement || "Aucun énoncé disponible.";
-        document.getElementById('theoremCat').innerText = `Catégorie : ${CATEGORIES[theo.G] || 'Autre'}`;
-        document.getElementById('theoremSource').innerText = theo.Source ? `Source : ${theo.Source}` : "Source : Standard";
-        
-        // Redirection au clic (cible l'ancre du théorème spécifique)
-        document.getElementById('randomTheoremCard').addEventListener('click', () => {
-          window.location.href = `/Prob_Base/theorems#theorem-${theo.id}`;
+        const randTheo = theorems[Math.floor(Math.random() * theorems.length)];
+        document.getElementById('randTheoTitle').innerText = randTheo.title || `Théorème n°${randTheo.id}`;
+        document.getElementById('randTheoSnippet').innerText = randTheo.statement || "";
+        document.getElementById('randTheoCard').addEventListener('click', () => {
+          window.location.href = `/Prob_Base/theo/${randTheo.id}`;
         });
-      } else {
-        document.getElementById('theoremTitle').innerText = "Aucun théorème disponible";
-        document.getElementById('theoremStatement').innerText = "Veuillez d'abord ajouter un théorème théorique.";
       }
 
-      // 4. Rendu KaTeX des équations mathématiques des cartes
+      // 4. Rendu Mathématique KaTeX
       if (typeof renderMathInElement === 'function') {
-        document.querySelectorAll('.math-target').forEach(target => {
-          renderMathInElement(target, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false},
-              {left: '\\(', right: '\\)', display: false},
-              {left: '\\[', right: '\\]', display: true}
-            ],
-            throwOnError: false
-          });
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
         });
       }
     });
