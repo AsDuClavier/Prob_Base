@@ -15,164 +15,60 @@ const CATEGORIES = {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Répertoire - Théorèmes & Propriétés</title>
+  <title>Répertoire - Tous les Théorèmes</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   
   <style>
-    html {
-      scrollbar-gutter: stable;
-      scroll-behavior: smooth;
-    }
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    body { 
-      font-family: 'Segoe UI', sans-serif; 
-      background-color: #f4f6f9; 
-      color: #333; 
-      margin: 0; 
-      padding: 20px; 
-    }
-    .container { 
-      max-width: 1000px; 
-      margin: 0 auto; 
-      width: 100%; 
-    }
+    html { scrollbar-gutter: stable; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; width: 100%; }
     
-    .nav-links {
-      margin-bottom: 20px;
-    }
-    .back-btn {
-      display: inline-block;
-      color: #319795;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 1.05rem;
-      transition: color 0.2s;
-    }
-    .back-btn:hover {
-      color: #2c7a7b;
-    }
+    .nav-links { margin-bottom: 20px; }
+    .back-btn { display: inline-block; background: #34495e; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    .back-btn:hover { background: #2c3e50; }
 
-    h1 { 
-      color: #2c3e50; 
-      text-align: center; 
-      margin-bottom: 30px; 
-      font-weight: 800;
-    }
-
-    /* Barre de recherche et filtres de catégorie */
-    .filters { 
-      display: flex; 
-      gap: 15px; 
-      margin-bottom: 25px; 
-      justify-content: center; 
-      background: white; 
-      padding: 15px; 
-      border-radius: 8px; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      flex-wrap: wrap;
-    }
-    .search-input {
-      flex: 1;
-      min-width: 250px;
-      padding: 10px 15px;
-      border-radius: 6px;
-      border: 1px solid #cbd5e0;
-      font-size: 16px;
-      outline: none;
-    }
-    .search-input:focus {
-      border-color: #319795;
-    }
-    select { 
-      padding: 10px 12px; 
-      border-radius: 6px; 
-      border: 1px solid #cbd5e0; 
-      font-size: 16px; 
-      background: white; 
-      cursor: pointer; 
-      outline: none;
-    }
-    select:focus {
-      border-color: #319795;
-    }
+    h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
     
-    .grid { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 20px; 
-    }
+    /* Barre de filtres */
+    .filters { display: flex; gap: 15px; margin-bottom: 25px; justify-content: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    input[type="text"], select { padding: 10px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; background: white; }
+    input[type="text"] { flex: 1; max-width: 400px; }
+    select { cursor: pointer; min-width: 200px; }
     
-    /* Carte Théorème */
+    .grid { display: flex; flex-direction: column; gap: 20px; }
+    
+    /* Cartes Théorèmes (Thème vert) */
     .card { 
       background: white; 
-      padding: 25px; 
-      border-radius: 10px; 
+      padding: 20px; 
+      border-radius: 8px; 
       box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-      border-left: 6px solid #319795; 
-      transition: transform 0.2s, box-shadow 0.2s, border-left-color 0.2s;
+      border-left: 5px solid #2ecc71; 
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
     }
-    /* Effet d'ancrage ciblé pour surbrillance */
-    .card:target {
-      animation: highlight 2s ease-out;
-      border-left-color: #e53e3e;
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-left-color: #27ae60;
     }
-    
-    @keyframes highlight {
-      0% { background-color: #feebc8; }
-      100% { background-color: white; }
-    }
+    .card h2 { margin: 0 0 10px 0; font-size: 1.3rem; color: #2c3e50; }
 
-    .meta { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 8px; 
-      margin-bottom: 15px; 
-      font-size: 13px; 
-      font-weight: bold; 
-    }
-    .badge-cat { 
-      background: #e6fffa; 
-      color: #234e52; 
-      padding: 4px 10px; 
-      border-radius: 4px; 
-    }
-    .badge-source { 
-      background: #f7fafc; 
-      color: #4a5568; 
-      padding: 4px 10px; 
-      border-radius: 4px; 
-      border: 1px solid #e2e8f0;
-    }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+    .badge-cat { background: #eafaf1; color: #2ecc71; padding: 4px 8px; border-radius: 4px; }
+    .badge-source { background: #eaeaea; color: #666; padding: 4px 8px; border-radius: 4px; }
     
-    .theorem-title {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #1a202c;
-      margin: 0 0 12px 0;
-    }
-    .statement { 
-      font-size: 16px; 
-      line-height: 1.6; 
-      color: #2d3748;
-    }
-    .statement .katex-display { 
-      overflow-x: auto; 
-      overflow-y: hidden; 
-      padding: 8px 0; 
-    }
-    .hidden { 
-      display: none !important; 
-    }
+    .statement { font-size: 16px; line-height: 1.6; color: #4a5568; }
+    .hidden { display: none !important; }
 
     @media (max-width: 600px) {
       body { padding: 12px; }
-      .filters { flex-direction: column; }
-      select, .search-input { width: 100%; }
+      .filters { flex-direction: column; align-items: stretch; }
+      input[type="text"], select { max-width: 100%; width: 100%; }
     }
   </style>
 </head>
@@ -181,11 +77,11 @@ const CATEGORIES = {
     <div class="nav-links">
       <a href="/Prob_Base/" class="back-btn">← Accueil</a>
     </div>
-
-    <h1>Théorèmes & Propriétés Essentielles</h1>
+    
+    <h1>Répertoire Global des Théorèmes</h1>
     
     <div class="filters">
-      <input type="text" id="searchInput" class="search-input" placeholder="Rechercher un théorème par mot-clé..." />
+      <input type="text" id="searchBar" placeholder="Rechercher un théorème (ex: Wilson, Gauss...)" />
       <select id="catFilter">
         <option value="">Toutes les catégories</option>
         <option value="A">Algèbre</option>
@@ -197,16 +93,15 @@ const CATEGORIES = {
 
     <div class="grid" id="theoremsGrid">
       {theorems.map((theo) => (
-        <div class="card" id={`theorem-${theo.id}`} data-title={theo.title} data-category={theo.G} data-statement={theo.statement}>
+        <div class="card" data-id={theo.id} data-title={theo.title?.toLowerCase()} data-category={theo.G}>
+          <h2>{theo.title || `Théorème #${theo.id}`}</h2>
           <div class="meta">
-            <span class="badge-cat">{CATEGORIES[theo.G] || 'Autre'}</span>
-            {theo.Source && <span class="badge-source">Source : {theo.Source}</span>}
+            <span class="badge-cat">{CATEGORIES[theo.G] || 'Général'}</span>
+            {theo.Source && <span class="badge-source">{theo.Source}</span>}
           </div>
           
-          <h2 class="theorem-title">{theo.title || 'Théorème'}</h2>
-          
           <div class="statement math-target">
-            {theo.statement || "⚠️ Aucun énoncé rédigé"}
+            {theo.statement || "⚠️ Aucun énoncé trouvé"}
           </div>
         </div>
       ))}
@@ -215,7 +110,35 @@ const CATEGORIES = {
 
   <script is:inline>
     window.addEventListener('DOMContentLoaded', () => {
-      // 1. Rendu KaTeX progressif et asynchrone (évite la surcharge d'affichage)
+      // 1. Redirection dynamique vers la page individuelle theo/[id]
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+          const theoremId = card.getAttribute('data-id');
+          window.location.href = `/Prob_Base/theo/${theoremId}`;
+        });
+      });
+
+      // 2. Filtrage dynamique combiné (Texte + Catégorie)
+      const searchBar = document.getElementById('searchBar');
+      const catFilter = document.getElementById('catFilter');
+      const cards = document.querySelectorAll('.card');
+
+      function filterTheorems() {
+        const textQuery = searchBar.value.trim().toLowerCase();
+        const selectedCat = catFilter.value;
+
+        cards.forEach(card => {
+          const matchText = !textQuery || card.getAttribute('data-title').includes(textQuery);
+          const matchCat = !selectedCat || card.getAttribute('data-category') === selectedCat;
+          
+          card.classList.toggle('hidden', !(matchText && matchCat));
+        });
+      }
+
+      searchBar.addEventListener('input', filterTheorems);
+      catFilter.addEventListener('change', filterTheorems);
+
+      // 3. Rendu KaTeX par lots progressifs
       const mathTargets = Array.from(document.querySelectorAll('.math-target'));
       let index = 0;
       const batchSize = 15;
@@ -227,9 +150,7 @@ const CATEGORIES = {
           renderMathInElement(mathTargets[index], {
             delimiters: [
               {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false},
-              {left: '\\(', right: '\\)', display: false},
-              {left: '\\[', right: '\\]', display: true}
+              {left: '$', right: '$', display: false}
             ],
             throwOnError: false
           });
@@ -237,29 +158,6 @@ const CATEGORIES = {
         if (index < mathTargets.length) setTimeout(renderNextBatch, 16);
       }
       renderNextBatch();
-
-      // 2. Filtrage interactif (Recherche combinée par mots-clés + Catégorie)
-      const searchInput = document.getElementById('searchInput');
-      const catFilter = document.getElementById('catFilter');
-      const cards = document.querySelectorAll('.card');
-
-      function filterTheorems() {
-        const query = searchInput.value.toLowerCase().trim();
-        const catValue = catFilter.value;
-
-        cards.forEach(card => {
-          const title = (card.dataset.title || "").toLowerCase();
-          const statement = (card.dataset.statement || "").toLowerCase();
-          
-          const matchSearch = !query || title.includes(query) || statement.includes(query);
-          const matchCat = !catValue || card.dataset.category === catValue;
-          
-          card.classList.toggle('hidden', !(matchSearch && matchCat));
-        });
-      }
-
-      searchInput.addEventListener('input', filterTheorems);
-      catFilter.addEventListener('change', filterTheorems);
     });
   </script>
 </body>
