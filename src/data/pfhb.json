@@ -29,6 +29,7 @@
     "id": 5,
     "statement": "Find the minimum positive value of $ 1*2*3*4*...*2020*2021*2022$ where you can replace $*$ as $+$ or $-$",
     "G": "1T",
+    "Source": "Azerbaijan 2022 Junior National Olympiad",
     "Solution": "since we are given a positive integer we can try to get 1 and we can;\n$(1-2)+(4-3)=0$\n$(5-6)+(8-7)=0$\n…\n$(2017-2018)+(2020-2019)=0$\n$(2022-2021)=1$\nsumming these up would give the desired result which is $1$"
   }
 ]
